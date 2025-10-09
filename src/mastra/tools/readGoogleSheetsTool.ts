@@ -47,16 +47,20 @@ export const readGoogleSheetsTool = createTool({
     const resJson = await res.json();
     const connectionSettings = resJson?.items?.[0];
 
-    if (!connectionSettings || !connectionSettings.settings.access_token) {
+    const accessToken =
+      connectionSettings?.settings?.oauth?.credentials?.access_token ||
+      connectionSettings?.settings?.access_token;
+
+    if (!connectionSettings || !accessToken) {
       throw new Error(
-        `Google Sheets not connected: HTTP ${res.status} ${res.statusText}: ${JSON.stringify(resJson)}`,
+        `Google Sheets not connected or missing access token: HTTP ${res.status} ${res.statusText}`,
       );
     }
 
     logger?.info("📝 [ReadGoogleSheets] Creating Google Sheets client");
     const auth = new google.auth.OAuth2();
     auth.setCredentials({
-      access_token: connectionSettings.settings.access_token,
+      access_token: accessToken,
     });
 
     const sheets = google.sheets({ version: "v4", auth });
