@@ -57,15 +57,8 @@ export const readGoogleSheetsTool = createTool({
       );
     }
 
-    logger?.info("📝 [ReadGoogleSheets] Creating Google Sheets client");
-    logger?.info("📝 [ReadGoogleSheets] Using spreadsheet ID:", {
+    logger?.info("📝 [ReadGoogleSheets] Creating Google Sheets client", {
       spreadsheetId,
-      length: spreadsheetId.length,
-    });
-    logger?.info("📝 [ReadGoogleSheets] Access token info:", {
-      tokenStart: accessToken.substring(0, 10),
-      tokenEnd: accessToken.substring(accessToken.length - 10),
-      tokenLength: accessToken.length,
     });
 
     const auth = new google.auth.OAuth2();
@@ -86,7 +79,9 @@ export const readGoogleSheetsTool = createTool({
       });
       
       const rows = response.data.values || [];
+      // Skip first row (header) and filter empty values
       const accounts = rows
+        .slice(1) // Skip header row
         .flat()
         .filter((url) => url && url.trim().length > 0)
         .map((url) => url.trim());
