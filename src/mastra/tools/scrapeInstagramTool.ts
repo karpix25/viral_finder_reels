@@ -100,7 +100,7 @@ export const scrapeInstagramTool = createTool({
     logger?.info("📝 [ScrapeInstagram] Fetching results");
 
     const resultsResponse = await fetch(
-      `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs/${runId}/dataset/items`,
+      `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`,
       {
         headers: {
           Authorization: `Bearer ${apifyApiKey}`,
@@ -110,11 +110,29 @@ export const scrapeInstagramTool = createTool({
 
     const results = await resultsResponse.json();
 
-    logger?.info("📝 [ScrapeInstagram] Processing results", {
-      resultsCount: results.length,
+    logger?.info("📝 [ScrapeInstagram] Raw results structure", {
+      isArray: Array.isArray(results),
+      type: typeof results,
+      keys: Object.keys(results || {}),
+      firstItemType: results?.[0] ? typeof results[0] : "no items",
+      error: results?.error || null,
     });
 
-    const reels = results
+    if (results?.error) {
+      logger?.error("❌ [ScrapeInstagram] Apify returned error", {
+        error: results.error,
+        username,
+      });
+      return { username, reels: [] };
+    }
+
+    const resultsArray = Array.isArray(results) ? results : [];
+
+    logger?.info("📝 [ScrapeInstagram] Processing results", {
+      resultsCount: resultsArray.length,
+    });
+
+    const reels = resultsArray
       .filter((item: any) => item.type === "Video" || item.type === "Reel")
       .map((item: any) => ({
         id: item.id,

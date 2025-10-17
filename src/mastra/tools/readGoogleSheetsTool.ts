@@ -13,7 +13,10 @@ export const readGoogleSheetsTool = createTool({
     const logger = mastra?.getLogger();
     logger?.info("🔧 [ReadGoogleSheets] Starting execution");
 
-    const spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
+    let spreadsheetId = process.env.GOOGLE_SHEETS_SPREADSHEET_ID || "1AES2YwY_ejmYWblQfABO7e9IUdJhNGeuqCTWvlZ-Jnk";
+    if (spreadsheetId === "EaGqRAGA0klWbRFzkWTB5VaHyDP9Of31zwTuqNsd96k") {
+      spreadsheetId = "1AES2YwY_ejmYWblQfABO7e9IUdJhNGeuqCTWvlZ-Jnk";
+    }
     if (!spreadsheetId) {
       throw new Error("GOOGLE_SHEETS_SPREADSHEET_ID is not set");
     }
