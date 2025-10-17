@@ -58,6 +58,16 @@ export const readGoogleSheetsTool = createTool({
     }
 
     logger?.info("📝 [ReadGoogleSheets] Creating Google Sheets client");
+    logger?.info("📝 [ReadGoogleSheets] Using spreadsheet ID:", {
+      spreadsheetId,
+      length: spreadsheetId.length,
+    });
+    logger?.info("📝 [ReadGoogleSheets] Access token info:", {
+      tokenStart: accessToken.substring(0, 10),
+      tokenEnd: accessToken.substring(accessToken.length - 10),
+      tokenLength: accessToken.length,
+    });
+
     const auth = new google.auth.OAuth2();
     auth.setCredentials({
       access_token: accessToken,
@@ -69,22 +79,32 @@ export const readGoogleSheetsTool = createTool({
       spreadsheetId,
     });
 
-    const response = await sheets.spreadsheets.values.get({
-      spreadsheetId,
-      range: "A:A",
-    });
+    try {
+      const response = await sheets.spreadsheets.values.get({
+        spreadsheetId,
+        range: "A:A",
+      });
+      
+      const rows = response.data.values || [];
+      const accounts = rows
+        .flat()
+        .filter((url) => url && url.trim().length > 0)
+        .map((url) => url.trim());
 
-    const rows = response.data.values || [];
-    const accounts = rows
-      .flat()
-      .filter((url) => url && url.trim().length > 0)
-      .map((url) => url.trim());
+      logger?.info("✅ [ReadGoogleSheets] Completed successfully", {
+        accountsCount: accounts.length,
+        accounts,
+      });
 
-    logger?.info("✅ [ReadGoogleSheets] Completed successfully", {
-      accountsCount: accounts.length,
-      accounts,
-    });
-
-    return { accounts };
+      return { accounts };
+    } catch (error: any) {
+      logger?.error("❌ [ReadGoogleSheets] Error details:", {
+        message: error.message,
+        code: error.code,
+        status: error.status,
+        spreadsheetId,
+      });
+      throw error;
+    }
   },
 });
