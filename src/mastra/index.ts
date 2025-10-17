@@ -171,7 +171,7 @@ if (Object.keys(mastra.getAgents()).length > 1) {
 }
 
 // Start Telegram bot for processing viral reels from group chat
-startTelegramBot().catch((error) => {
+startTelegramBot(mastra).catch((error) => {
   mastra.getLogger()?.error("❌ [Main] Failed to start Telegram bot", {
     error: error.message,
   });

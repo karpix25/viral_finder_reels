@@ -1,9 +1,7 @@
 import { Telegraf } from "telegraf";
 import { addAccountToSheetsTool } from "../tools/addAccountToSheetsTool";
 import { RuntimeContext } from "@mastra/core/di";
-import { mastra } from "../index";
-
-const logger = mastra.getLogger();
+import type { Mastra } from "@mastra/core";
 
 // Extract Instagram username from various URL formats
 function extractInstagramUsername(url: string): string | null {
@@ -34,7 +32,8 @@ function extractInstagramUrls(text: string): string[] {
   return text.match(urlPattern) || [];
 }
 
-export async function startTelegramBot() {
+export async function startTelegramBot(mastra: Mastra) {
+  const logger = mastra.getLogger();
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   
   if (!botToken) {
@@ -167,8 +166,18 @@ export async function startTelegramBot() {
   });
 
   // Start the bot
-  logger?.info("🚀 [TelegramBot] Bot is ready to receive messages");
-  await bot.launch();
+  logger?.info("🚀 [TelegramBot] Launching bot with polling...");
+  
+  try {
+    await bot.launch();
+    logger?.info("✅ [TelegramBot] Bot is ready to receive messages");
+  } catch (error: any) {
+    logger?.error("❌ [TelegramBot] Failed to launch bot", {
+      error: error.message,
+      stack: error.stack,
+    });
+    throw error;
+  }
 
   // Enable graceful stop
   process.once("SIGINT", () => bot.stop("SIGINT"));
