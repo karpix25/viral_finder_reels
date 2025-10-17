@@ -14,6 +14,8 @@ import { readGoogleSheetsTool } from "./tools/readGoogleSheetsTool";
 import { scrapeInstagramTool } from "./tools/scrapeInstagramTool";
 import { analyzeViralReelsTool } from "./tools/analyzeViralReelsTool";
 import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool";
+import { addAccountToSheetsTool } from "./tools/addAccountToSheetsTool";
+import { startTelegramBot } from "./services/telegramBot";
 
 class ProductionPinoLogger extends MastraLogger {
   protected logger: pino.Logger;
@@ -74,6 +76,7 @@ export const mastra = new Mastra({
         scrapeInstagramTool,
         analyzeViralReelsTool,
         sendTelegramMessageTool,
+        addAccountToSheetsTool,
       },
     }),
   },
@@ -166,3 +169,10 @@ if (Object.keys(mastra.getAgents()).length > 1) {
     "More than 1 agents found. Currently, more than 1 agents are not supported in the UI, since doing so will cause app state to be inconsistent.",
   );
 }
+
+// Start Telegram bot for processing viral reels from group chat
+startTelegramBot().catch((error) => {
+  mastra.getLogger()?.error("❌ [Main] Failed to start Telegram bot", {
+    error: error.message,
+  });
+});
