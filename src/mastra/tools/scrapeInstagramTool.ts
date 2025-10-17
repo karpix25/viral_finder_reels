@@ -132,7 +132,34 @@ export const scrapeInstagramTool = createTool({
       resultsCount: resultsArray.length,
     });
 
-    const reels = resultsArray
+    if (resultsArray.length > 0) {
+      const firstResult = resultsArray[0];
+      logger?.info("📝 [ScrapeInstagram] First result sample", {
+        keys: Object.keys(firstResult || {}),
+        ownerUsername: firstResult?.ownerUsername,
+        username: firstResult?.username,
+        error: firstResult?.error || null,
+        errorDescription: firstResult?.errorDescription || null,
+        latestPostsCount: firstResult?.latestPosts?.length || 0,
+      });
+
+      if (firstResult?.error) {
+        logger?.error("❌ [ScrapeInstagram] Apify returned account error", {
+          username,
+          error: firstResult.error,
+          errorDescription: firstResult.errorDescription,
+        });
+        return { username, reels: [] };
+      }
+    }
+
+    const allPosts = resultsArray.flatMap((item: any) => item.latestPosts || []);
+
+    logger?.info("📝 [ScrapeInstagram] Extracted posts from latestPosts", {
+      totalPosts: allPosts.length,
+    });
+
+    const reels = allPosts
       .filter((item: any) => item.type === "Video" || item.type === "Reel")
       .map((item: any) => ({
         id: item.id,
