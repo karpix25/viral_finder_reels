@@ -5,24 +5,35 @@ import type { Mastra } from "@mastra/core";
 
 // Extract Instagram username from various URL formats
 function extractInstagramUsername(url: string): string | null {
-  const patterns = [
-    // https://www.instagram.com/reel/ABC123/
-    /instagram\.com\/reel\/[^\/]+\/?\?igsh=([^&\s]+)/,
-    // https://www.instagram.com/p/ABC123/
-    /instagram\.com\/p\/[^\/]+/,
-    // https://www.instagram.com/username/reel/ABC123/
-    /instagram\.com\/([^\/\s]+)\/(?:reel|p)\//,
-    // https://www.instagram.com/username/
-    /instagram\.com\/([^\/\s?]+)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
+  // Remove trailing slashes and clean URL
+  const cleanUrl = url.trim().replace(/\/+$/, '');
+  
+  // Pattern 1: https://instagram.com/username/reel/ABC123 or https://instagram.com/username/p/ABC123
+  // This extracts "username" when it appears before /reel/ or /p/
+  const userWithPostPattern = /instagram\.com\/([^\/\s?]+)\/(?:reel|p)\//;
+  const userWithPostMatch = cleanUrl.match(userWithPostPattern);
+  if (userWithPostMatch && userWithPostMatch[1]) {
+    const username = userWithPostMatch[1];
+    // Make sure it's not a keyword like "reel", "p", "stories", "tv", etc.
+    if (!['reel', 'p', 'tv', 'stories', 'explore', 'direct'].includes(username.toLowerCase())) {
+      return username;
     }
   }
-
+  
+  // Pattern 2: https://instagram.com/username/ or https://instagram.com/username
+  // This is for direct profile links
+  const directProfilePattern = /instagram\.com\/([^\/\s?]+)\/?$/;
+  const directProfileMatch = cleanUrl.match(directProfilePattern);
+  if (directProfileMatch && directProfileMatch[1]) {
+    const username = directProfileMatch[1];
+    // Make sure it's not a keyword
+    if (!['reel', 'p', 'tv', 'stories', 'explore', 'direct'].includes(username.toLowerCase())) {
+      return username;
+    }
+  }
+  
+  // If we can't extract username, return null
+  // (e.g., for links like instagram.com/reel/ABC123/ without username)
   return null;
 }
 
@@ -122,7 +133,17 @@ export async function startTelegramBot(mastra: Mastra) {
           logger?.warn("⚠️ [TelegramBot] Could not extract username from URL", {
             url,
           });
-          failedAccounts.push(url);
+          failedAccounts.push(`${url} (не удалось извлечь username)`);
+          continue;
+        }
+        
+        // Validate username format (Instagram usernames are alphanumeric + dots + underscores)
+        if (!/^[a-zA-Z0-9._]+$/.test(username)) {
+          logger?.warn("⚠️ [TelegramBot] Invalid username format", {
+            username,
+            url,
+          });
+          failedAccounts.push(`${username} (некорректный формат)`);
           continue;
         }
 
