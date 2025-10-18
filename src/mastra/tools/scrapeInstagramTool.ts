@@ -160,8 +160,26 @@ export const scrapeInstagramTool = createTool({
       totalPosts: allPosts.length,
     });
 
-    const reels = allPosts
-      .filter((item: any) => item.type === "Video" || item.type === "Reel")
+    const filteredReels = allPosts.filter(
+      (item: any) => item.type === "Video" || item.type === "Reel",
+    );
+
+    // Log first reel details for debugging
+    if (filteredReels.length > 0) {
+      const firstReel = filteredReels[0];
+      logger?.info("🔍 [ScrapeInstagram] First reel raw data sample", {
+        url: firstReel.url,
+        keys: Object.keys(firstReel),
+        videoViewCount: firstReel.videoViewCount,
+        playCount: firstReel.playCount,
+        viewCount: firstReel.viewCount,
+        videoPlayCount: firstReel.videoPlayCount,
+        likesCount: firstReel.likesCount,
+        commentsCount: firstReel.commentsCount,
+      });
+    }
+
+    const reels = filteredReels
       .map((item: any) => ({
         id: item.id,
         caption: item.caption || "",

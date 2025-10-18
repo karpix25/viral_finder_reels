@@ -87,7 +87,7 @@ export const sendSingleViralReelTool = createTool({
 👥 *Подписчиков:* ${followersCount.toLocaleString()}
 🔗 *Ссылка:* ${reelUrl}
 
-📊 *Статистика:*
+📊 *Статистика (на момент скрапинга):*
 👁 Просмотры: ${viewCount.toLocaleString()}
 ❤️ Лайки: ${likeCount.toLocaleString()}
 💬 Комментарии: ${commentCount.toLocaleString()}
@@ -98,6 +98,8 @@ export const sendSingleViralReelTool = createTool({
 📊 Средний показатель: ${averageViews.toLocaleString()} просмотров
 
 ${caption ? `📝 *Описание:* ${caption.slice(0, 100)}${caption.length > 100 ? "..." : ""}` : ""}
+
+_⚠️ Данные могут быть не актуальны, проверяйте на Instagram_
 `.trim();
 
     try {
