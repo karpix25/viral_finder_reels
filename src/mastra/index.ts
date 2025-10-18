@@ -14,6 +14,7 @@ import { readGoogleSheetsTool } from "./tools/readGoogleSheetsTool";
 import { scrapeInstagramTool } from "./tools/scrapeInstagramTool";
 import { analyzeViralReelsTool } from "./tools/analyzeViralReelsTool";
 import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool";
+import { sendSingleViralReelTool } from "./tools/sendSingleViralReelTool";
 import { addAccountToSheetsTool } from "./tools/addAccountToSheetsTool";
 import { getPostOwnerTool } from "./tools/getPostOwnerTool";
 import { startTelegramBot } from "./services/telegramBot";
@@ -77,6 +78,7 @@ export const mastra = new Mastra({
         scrapeInstagramTool,
         analyzeViralReelsTool,
         sendTelegramMessageTool,
+        sendSingleViralReelTool,
         addAccountToSheetsTool,
         getPostOwnerTool,
       },
