@@ -10,6 +10,7 @@ export const scrapeInstagramTool = createTool({
   }),
   outputSchema: z.object({
     username: z.string(),
+    followersCount: z.number(),
     reels: z.array(
       z.object({
         id: z.string(),
@@ -123,7 +124,7 @@ export const scrapeInstagramTool = createTool({
         error: results.error,
         username,
       });
-      return { username, reels: [] };
+      return { username, followersCount: 0, reels: [] };
     }
 
     const resultsArray = Array.isArray(results) ? results : [];
@@ -149,7 +150,7 @@ export const scrapeInstagramTool = createTool({
           error: firstResult.error,
           errorDescription: firstResult.errorDescription,
         });
-        return { username, reels: [] };
+        return { username, followersCount: 0, reels: [] };
       }
     }
 
@@ -172,13 +173,18 @@ export const scrapeInstagramTool = createTool({
       }))
       .slice(0, 20);
 
+    // Extract followers count from first result
+    const followersCount = resultsArray[0]?.followersCount || 0;
+
     logger?.info("✅ [ScrapeInstagram] Completed successfully", {
       username,
+      followersCount,
       reelsCount: reels.length,
     });
 
     return {
       username,
+      followersCount,
       reels,
     };
   },

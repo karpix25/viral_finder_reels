@@ -135,6 +135,7 @@ const stepProcessAccountsAndSendFindings = createStep({
                   ageInDays,
                   growthMultiplier,
                   averageViews,
+                  followersCount: accountData.followersCount,
                 },
                 mastra,
                 runtimeContext,
