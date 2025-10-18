@@ -106,10 +106,23 @@ export const getPostOwnerTool = createTool({
     });
 
     if (!results || results.length === 0) {
-      throw new Error("No results returned from Apify");
+      logger?.error("❌ [GetPostOwner] No results returned from Apify", {
+        url: postUrl,
+        resultsLength: results?.length,
+      });
+      throw new Error(`No results returned from Apify for URL: ${postUrl}`);
     }
 
     const postData = results[0];
+    
+    // Log the full post data for debugging
+    logger?.info("📝 [GetPostOwner] Post data received", {
+      url: postUrl,
+      hasError: !!postData.error,
+      error: postData.error,
+      errorDescription: postData.errorDescription,
+      availableFields: Object.keys(postData),
+    });
     
     // Check for restricted access error
     if (postData.error === "restricted_page") {
@@ -117,7 +130,17 @@ export const getPostOwnerTool = createTool({
         url: postUrl,
         errorDescription: postData.errorDescription,
       });
-      throw new Error("Restricted access - this post is private or has limited access");
+      throw new Error(`Restricted access - post is private or has limited access: ${postUrl}`);
+    }
+    
+    // Check for other errors
+    if (postData.error) {
+      logger?.error("❌ [GetPostOwner] Apify returned error", {
+        url: postUrl,
+        error: postData.error,
+        errorDescription: postData.errorDescription,
+      });
+      throw new Error(`Apify error for ${postUrl}: ${postData.error}`);
     }
     
     // The response should have ownerUsername at the top level or nested
