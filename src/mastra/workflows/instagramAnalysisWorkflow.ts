@@ -66,29 +66,49 @@ const step2ScrapeReels = createStep({
     });
 
     const accountData = [];
+    const BATCH_SIZE = 15;
 
-    for (const accountUrl of accounts) {
-      try {
-        logger?.info("📝 [Step2] Processing account", { accountUrl });
+    // Split accounts into batches to avoid timeout
+    for (let i = 0; i < accounts.length; i += BATCH_SIZE) {
+      const batch = accounts.slice(i, i + BATCH_SIZE);
+      const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(accounts.length / BATCH_SIZE);
 
-        const result = await scrapeInstagramTool.execute({
-          context: { accountUrl },
-          mastra,
-          runtimeContext,
-        });
+      logger?.info("📦 [Step2] Processing batch", {
+        batchNumber,
+        totalBatches,
+        batchSize: batch.length,
+      });
 
-        accountData.push(result);
+      for (const accountUrl of batch) {
+        try {
+          logger?.info("📝 [Step2] Processing account", { accountUrl });
 
-        logger?.info("✅ [Step2] Account processed", {
-          username: result.username,
-          reelsCount: result.reels.length,
-        });
-      } catch (error) {
-        logger?.error("❌ [Step2] Error processing account", {
-          accountUrl,
-          error: String(error),
-        });
+          const result = await scrapeInstagramTool.execute({
+            context: { accountUrl },
+            mastra,
+            runtimeContext,
+          });
+
+          accountData.push(result);
+
+          logger?.info("✅ [Step2] Account processed", {
+            username: result.username,
+            reelsCount: result.reels.length,
+          });
+        } catch (error) {
+          logger?.error("❌ [Step2] Error processing account", {
+            accountUrl,
+            error: String(error),
+          });
+        }
       }
+
+      logger?.info("✅ [Step2] Batch complete", {
+        batchNumber,
+        totalBatches,
+        accountsProcessed: accountData.length,
+      });
     }
 
     logger?.info("✅ [Step2] All accounts scraped", {
@@ -207,7 +227,6 @@ export const instagramAnalysisWorkflow = createWorkflow({
     success: z.boolean(),
     messageId: z.number().optional(),
   }),
-  triggerSchema: z.object({}),
 })
   .then(step1ReadAccounts)
   .then(step2ScrapeReels)
