@@ -23,8 +23,9 @@ export const getPostOwnerTool = createTool({
 
     logger?.info("📝 [GetPostOwner] Starting Apify actor");
 
+    // Use instagram-profile-scraper with directUrls parameter
     const actorRunResponse = await fetch(
-      "https://api.apify.com/v2/acts/apify~instagram-post-scraper/runs",
+      "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs",
       {
         method: "POST",
         headers: {
@@ -33,6 +34,8 @@ export const getPostOwnerTool = createTool({
         },
         body: JSON.stringify({
           directUrls: [postUrl],
+          resultsType: "posts",
+          resultsLimit: 1,
         }),
       },
     );
@@ -61,7 +64,7 @@ export const getPostOwnerTool = createTool({
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const statusResponse = await fetch(
-        `https://api.apify.com/v2/acts/apify~instagram-post-scraper/runs/${runId}`,
+        `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs/${runId}`,
         {
           headers: {
             Authorization: `Bearer ${apifyApiKey}`,
@@ -108,12 +111,24 @@ export const getPostOwnerTool = createTool({
 
     const postData = results[0];
     
-    // Extract username from ownerUsername field
-    const username = postData.ownerUsername || postData.owner?.username;
+    // The response should have ownerUsername at the top level or nested
+    // Check different possible fields
+    let username = 
+      postData.ownerUsername || 
+      postData.owner?.username ||
+      postData.username ||
+      postData.ownerFullName;
+
+    // If still no username, try to extract from latestPosts
+    if (!username && postData.latestPosts && postData.latestPosts.length > 0) {
+      const firstPost = postData.latestPosts[0];
+      username = firstPost.ownerUsername || firstPost.owner?.username;
+    }
 
     if (!username) {
       logger?.error("❌ [GetPostOwner] Could not find username in results", {
-        postData: JSON.stringify(postData).substring(0, 500),
+        postData: JSON.stringify(postData).substring(0, 1000),
+        keys: Object.keys(postData),
       });
       throw new Error("Could not extract username from post data");
     }
