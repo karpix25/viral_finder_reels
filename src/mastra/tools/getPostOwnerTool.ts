@@ -111,6 +111,15 @@ export const getPostOwnerTool = createTool({
 
     const postData = results[0];
     
+    // Check for restricted access error
+    if (postData.error === "restricted_page") {
+      logger?.error("❌ [GetPostOwner] Restricted access to post", {
+        url: postUrl,
+        errorDescription: postData.errorDescription,
+      });
+      throw new Error("Restricted access - this post is private or has limited access");
+    }
+    
     // The response should have ownerUsername at the top level or nested
     // Check different possible fields
     let username = 

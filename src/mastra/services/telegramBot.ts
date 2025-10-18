@@ -152,7 +152,13 @@ export async function startTelegramBot(mastra: Mastra) {
               url,
               error: error.message,
             });
-            failedAccounts.push(`${url} (не удалось получить username)`);
+            
+            // Check if error is due to restricted access
+            if (error.message.includes("restricted") || error.message.includes("Restricted")) {
+              failedAccounts.push(`${url} (приватный/ограниченный доступ)`);
+            } else {
+              failedAccounts.push(`${url} (не удалось получить username)`);
+            }
             continue;
           }
         }
@@ -217,6 +223,9 @@ export async function startTelegramBot(mastra: Mastra) {
       }
 
       if (responseMessage) {
+        // Add a small delay to avoid Telegram rate limiting
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
         await ctx.reply(responseMessage.trim(), {
           reply_parameters: {
             message_id: message.message_id,
