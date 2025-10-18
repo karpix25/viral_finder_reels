@@ -136,6 +136,37 @@ const stepProcessAccountsAndSendFindings = createStep({
           averageViews,
         });
 
+        // Determine adaptive criteria based on account size
+        const followersCount = accountData.followersCount;
+        let requiredMultiplier: number;
+        let minimumViews: number;
+        let accountSizeCategory: string;
+
+        if (followersCount < 100000) {
+          // Small accounts: 5x growth + 50K minimum views
+          requiredMultiplier = 5.0;
+          minimumViews = 50000;
+          accountSizeCategory = "Малый";
+        } else if (followersCount < 1000000) {
+          // Medium accounts: 4x growth + 200K minimum views
+          requiredMultiplier = 4.0;
+          minimumViews = 200000;
+          accountSizeCategory = "Средний";
+        } else {
+          // Large accounts: 3x growth + 500K minimum views
+          requiredMultiplier = 3.0;
+          minimumViews = 500000;
+          accountSizeCategory = "Большой";
+        }
+
+        logger?.info("📏 [Step2] Adaptive criteria set", {
+          username: accountData.username,
+          followersCount,
+          accountSizeCategory,
+          requiredMultiplier,
+          minimumViews,
+        });
+
         // Check each reel
         for (const reel of accountData.reels) {
           const reelDate = new Date(reel.timestamp);
@@ -153,8 +184,8 @@ const stepProcessAccountsAndSendFindings = createStep({
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-          // Check if viral (3x higher than average, within 5 days, AND minimum 500k views)
-          if (growthMultiplier >= 3.0 && reel.viewCount >= 500000) {
+          // Check if viral using adaptive criteria
+          if (growthMultiplier >= requiredMultiplier && reel.viewCount >= minimumViews) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
               reelUrl: reel.url,
@@ -162,7 +193,9 @@ const stepProcessAccountsAndSendFindings = createStep({
               growthMultiplier: growthMultiplier.toFixed(1),
               viewCount: reel.viewCount,
               averageViews,
-              minimumViewsThreshold: 500000,
+              accountSizeCategory,
+              requiredMultiplier,
+              minimumViewsThreshold: minimumViews,
             });
 
             // Send immediately to Telegram
