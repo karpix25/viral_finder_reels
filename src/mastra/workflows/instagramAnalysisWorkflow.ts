@@ -144,8 +144,8 @@ const stepProcessAccountsAndSendFindings = createStep({
             (now.getTime() - reelDate.getTime()) / (1000 * 60 * 60 * 24),
           );
 
-          // Skip if older than 3 days
-          if (ageInDays > 3) {
+          // Skip if older than 5 days
+          if (ageInDays > 5) {
             continue;
           }
 
@@ -153,7 +153,7 @@ const stepProcessAccountsAndSendFindings = createStep({
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-          // Check if viral (3x higher than average, within 3 days, AND minimum 500k views)
+          // Check if viral (3x higher than average, within 5 days, AND minimum 500k views)
           if (growthMultiplier >= 3.0 && reel.viewCount >= 500000) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
