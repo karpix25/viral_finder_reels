@@ -46,6 +46,31 @@ export async function startTelegramBot(mastra: Mastra) {
   const bot = new Telegraf(botToken);
   const runtimeContext = new RuntimeContext();
 
+  // Help command
+  bot.command("help", async (ctx) => {
+    try {
+      const helpMessage = `🤖 **Инструкция по работе с ботом**\n\n` +
+        `Я автоматически добавляю Instagram аккаунты из вирусных рилсов в Google Sheets.\n\n` +
+        `**Как это работает:**\n` +
+        `1. Просто отправьте ссылку на Instagram рилс в чат\n` +
+        `2. Я автоматически извлеку username аккаунта\n` +
+        `3. Проверю, нет ли его уже в таблице\n` +
+        `4. Добавлю, если это новый аккаунт\n\n` +
+        `**Для добавления старых ссылок:**\n` +
+        `Просто перешлите или скопируйте старые сообщения с Instagram ссылками в этот чат, и я их обработаю!\n\n` +
+        `**Поддерживаемые форматы:**\n` +
+        `• https://instagram.com/username/reel/...\n` +
+        `• https://instagram.com/reel/...\n` +
+        `• https://instagram.com/p/...`;
+      
+      await ctx.reply(helpMessage);
+    } catch (error: any) {
+      logger?.error("❌ [TelegramBot] Error in help command", {
+        error: error.message,
+      });
+    }
+  });
+
   // Handle all messages in groups/supergroups
   bot.on("message", async (ctx) => {
     try {
