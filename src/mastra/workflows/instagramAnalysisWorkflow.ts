@@ -9,7 +9,7 @@ const runtimeContext = new RuntimeContext();
 
 // Maximum accounts to process per workflow run to avoid timeout
 // For 1000+ accounts, run the workflow multiple times
-const MAX_ACCOUNTS_PER_RUN = 20;
+const MAX_ACCOUNTS_PER_RUN = 10;
 
 const stepProcessAccountsAndSendFindings = createStep({
   id: "process-accounts-and-send-findings",
@@ -111,8 +111,8 @@ const stepProcessAccountsAndSendFindings = createStep({
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-          // Check if viral (5x higher than average and within 3 days)
-          if (growthMultiplier >= 5.0) {
+          // Check if viral (3x higher than average and within 3 days)
+          if (growthMultiplier >= 3.0) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
               reelUrl: reel.url,
