@@ -3,7 +3,6 @@ import { z } from "zod";
 import { readGoogleSheetsTool } from "../tools/readGoogleSheetsTool";
 import { scrapeInstagramTool } from "../tools/scrapeInstagramTool";
 import { sendSingleViralReelTool } from "../tools/sendSingleViralReelTool";
-import { addAccountToSheetsTool } from "../tools/addAccountToSheetsTool";
 import { RuntimeContext } from "@mastra/core/di";
 import { db } from "../storage";
 import { workflowProgress } from "../storage/schema";
@@ -112,56 +111,9 @@ const stepProcessAccountsAndSendFindings = createStep({
         logger?.info("✅ [Step2] Account scraped", {
           username: accountData.username,
           reelsCount: accountData.reels.length,
-          relatedProfilesCount: accountData.relatedProfiles.length,
         });
 
         accountsProcessed++;
-
-        // Auto-expand: Add related profiles to Google Sheets (до 1000 аккаунтов)
-        if (accountData.relatedProfiles.length > 0 && allAccounts.length < 1000) {
-          logger?.info("🔄 [Step2] Adding related profiles to expand account list", {
-            currentTotal: allAccounts.length,
-            relatedProfilesFound: accountData.relatedProfiles.length,
-            targetTotal: 1000,
-          });
-
-          let addedCount = 0;
-          for (const relatedUsername of accountData.relatedProfiles) {
-            // Stop if we've reached 1000 accounts
-            if (allAccounts.length + addedCount >= 1000) {
-              logger?.info("✅ [Step2] Reached target of 1000 accounts, stopping expansion");
-              break;
-            }
-
-            try {
-              const result = await addAccountToSheetsTool.execute({
-                context: { username: relatedUsername },
-                runtimeContext,
-                mastra,
-              });
-
-              if (result.added) {
-                addedCount++;
-                logger?.info("✅ [Step2] Added related profile", {
-                  username: relatedUsername,
-                  totalNow: allAccounts.length + addedCount,
-                });
-              }
-            } catch (error) {
-              logger?.error("❌ [Step2] Failed to add related profile", {
-                username: relatedUsername,
-                error: String(error),
-              });
-            }
-          }
-
-          if (addedCount > 0) {
-            logger?.info("🎉 [Step2] Auto-expansion complete", {
-              addedProfiles: addedCount,
-              newTotal: allAccounts.length + addedCount,
-            });
-          }
-        }
 
         // Analyze each reel for virality
         if (accountData.reels.length === 0) {
