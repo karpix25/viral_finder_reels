@@ -86,31 +86,38 @@ export const sendSingleViralReelTool = createTool({
       threadId: threadId || "основной чат (без ветки)",
     });
 
+    // Escape HTML characters in caption
+    const escapeHtml = (text: string) => {
+      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    };
+
+    const captionText = caption ? escapeHtml(caption.slice(0, 100) + (caption.length > 100 ? "..." : "")) : "";
+
     const message = `
-🔥 *ВИРУСНЫЙ РИЛС НАЙДЕН!*
+🔥 <b>ВИРУСНЫЙ РИЛС НАЙДЕН!</b>
 
-👤 *Аккаунт:* @${username}
-👥 *Подписчиков:* ${followersCount.toLocaleString()}
-🔗 *Ссылка:* ${reelUrl}
+👤 <b>Аккаунт:</b> @${username}
+👥 <b>Подписчиков:</b> ${followersCount.toLocaleString()}
+🔗 <b>Ссылка:</b> ${reelUrl}
 
-📊 *Статистика (на момент скрапинга):*
+📊 <b>Статистика (на момент скрапинга):</b>
 👁 Просмотры: ${viewCount.toLocaleString()}
 ❤️ Лайки: ${likeCount.toLocaleString()}
 💬 Комментарии: ${commentCount.toLocaleString()}
 
-📈 *Анализ вирусности:*
+📈 <b>Анализ вирусности:</b>
 ⏱ Возраст: ${ageInDays} дней
 🚀 Рост: ${growthMultiplier.toFixed(1)}x от среднего
 📊 Средний показатель: ${averageViews.toLocaleString()} просмотров
 
-${caption ? `📝 *Описание:* ${caption.slice(0, 100)}${caption.length > 100 ? "..." : ""}` : ""}
+${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
 
-_⚠️ Данные могут быть не актуальны, проверяйте на Instagram_
+<i>⚠️ Данные могут быть не актуальны, проверяйте на Instagram</i>
 `.trim();
 
     try {
       const result = await bot.telegram.sendMessage(chatId, message, {
-        parse_mode: "Markdown",
+        parse_mode: "HTML",
         message_thread_id: threadId ? parseInt(threadId) : undefined,
       });
 
