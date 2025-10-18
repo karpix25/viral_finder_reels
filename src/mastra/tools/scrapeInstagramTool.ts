@@ -4,7 +4,7 @@ import { z } from "zod";
 export const scrapeInstagramTool = createTool({
   id: "scrape-instagram-reels",
   description:
-    "Scrapes Instagram account reels data using Apify (gets recent reels with views count)",
+    "Scrapes Instagram account reels and carousel posts data using Apify (gets recent reels/carousels with views count)",
   inputSchema: z.object({
     accountUrl: z.string().describe("Instagram account URL"),
   }),
@@ -161,7 +161,7 @@ export const scrapeInstagramTool = createTool({
     });
 
     const filteredReels = allPosts.filter(
-      (item: any) => item.type === "Video" || item.type === "Reel",
+      (item: any) => item.type === "Video" || item.type === "Reel" || item.type === "Sidecar",
     );
 
     // Log first reel details for debugging

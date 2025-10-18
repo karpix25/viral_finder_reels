@@ -18,7 +18,7 @@ const MAX_ACCOUNTS_PER_RUN = 10;
 const stepProcessAccountsAndSendFindings = createStep({
   id: "process-accounts-and-send-findings",
   description:
-    "Process Instagram accounts, analyze for viral reels, and send findings immediately",
+    "Process Instagram accounts, analyze for viral reels and carousels, and send findings immediately",
   inputSchema: z.object({}),
   outputSchema: z.object({
     totalAccountsProcessed: z.number(),
@@ -130,9 +130,9 @@ const stepProcessAccountsAndSendFindings = createStep({
         );
         const averageViews = totalViews / accountData.reels.length;
 
-        logger?.info("📊 [Step2] Analyzing reels for virality", {
+        logger?.info("📊 [Step2] Analyzing reels and carousels for virality", {
           username: accountData.username,
-          totalReels: accountData.reels.length,
+          totalPosts: accountData.reels.length,
           averageViews,
         });
 
@@ -235,7 +235,7 @@ const stepProcessAccountsAndSendFindings = createStep({
 export const instagramAnalysisWorkflow = createWorkflow({
   id: "instagram-viral-analysis",
   description:
-    "Analyze Instagram accounts for viral reels and send instant notifications",
+    "Analyze Instagram accounts for viral reels and carousels and send instant notifications",
   inputSchema: z.object({}),
   outputSchema: z.object({
     totalAccountsProcessed: z.number(),
