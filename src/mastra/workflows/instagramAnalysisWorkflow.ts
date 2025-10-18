@@ -8,6 +8,10 @@ import { RuntimeContext } from "@mastra/core/di";
 
 const runtimeContext = new RuntimeContext();
 
+// Maximum accounts to process per workflow run to avoid timeout
+// For 1000+ accounts, run the workflow multiple times
+const MAX_ACCOUNTS_PER_RUN = 35;
+
 const step1ReadAccounts = createStep({
   id: "read-instagram-accounts",
   description: "Read Instagram accounts from Google Sheets",
@@ -25,11 +29,23 @@ const step1ReadAccounts = createStep({
       runtimeContext,
     });
 
+    // Limit accounts to avoid timeout (for 1000+ accounts, run workflow multiple times)
+    const limitedAccounts = result.accounts.slice(0, MAX_ACCOUNTS_PER_RUN);
+
     logger?.info("✅ [Step1] Accounts read successfully", {
-      count: result.accounts.length,
+      totalInSheet: result.accounts.length,
+      processingNow: limitedAccounts.length,
+      limit: MAX_ACCOUNTS_PER_RUN,
     });
 
-    return result;
+    if (result.accounts.length > MAX_ACCOUNTS_PER_RUN) {
+      logger?.info("⚠️ [Step1] More accounts available", {
+        remaining: result.accounts.length - MAX_ACCOUNTS_PER_RUN,
+        message: `This run will process ${limitedAccounts.length} accounts. Run workflow again to process more.`,
+      });
+    }
+
+    return { accounts: limitedAccounts };
   },
 });
 
