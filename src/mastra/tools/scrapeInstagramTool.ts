@@ -11,6 +11,7 @@ export const scrapeInstagramTool = createTool({
   outputSchema: z.object({
     username: z.string(),
     followersCount: z.number(),
+    relatedProfiles: z.array(z.string()),
     reels: z.array(
       z.object({
         id: z.string(),
@@ -124,7 +125,7 @@ export const scrapeInstagramTool = createTool({
         error: results.error,
         username,
       });
-      return { username, followersCount: 0, reels: [] };
+      return { username, followersCount: 0, relatedProfiles: [], reels: [] };
     }
 
     const resultsArray = Array.isArray(results) ? results : [];
@@ -150,7 +151,7 @@ export const scrapeInstagramTool = createTool({
           error: firstResult.error,
           errorDescription: firstResult.errorDescription,
         });
-        return { username, followersCount: 0, reels: [] };
+        return { username, followersCount: 0, relatedProfiles: [], reels: [] };
       }
     }
 
@@ -191,18 +192,30 @@ export const scrapeInstagramTool = createTool({
       }))
       .slice(0, 20);
 
-    // Extract followers count from first result
+    // Extract followers count and related profiles from first result
     const followersCount = resultsArray[0]?.followersCount || 0;
+    const relatedProfilesRaw = resultsArray[0]?.relatedProfiles || [];
+    
+    // Extract usernames from related profiles (they can be objects or strings)
+    const relatedProfiles = relatedProfilesRaw
+      .map((profile: any) => {
+        if (typeof profile === 'string') return profile;
+        return profile?.username || profile?.name || null;
+      })
+      .filter((name: string | null) => name !== null && name.length > 0)
+      .slice(0, 10); // Limit to 10 related profiles per account
 
     logger?.info("✅ [ScrapeInstagram] Completed successfully", {
       username,
       followersCount,
       reelsCount: reels.length,
+      relatedProfilesCount: relatedProfiles.length,
     });
 
     return {
       username,
       followersCount,
+      relatedProfiles,
       reels,
     };
   },
