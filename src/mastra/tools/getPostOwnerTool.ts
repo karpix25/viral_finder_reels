@@ -21,11 +21,11 @@ export const getPostOwnerTool = createTool({
       throw new Error("APIFY_API_KEY is not set");
     }
 
-    logger?.info("📝 [GetPostOwner] Starting Apify actor");
+    logger?.info("📝 [GetPostOwner] Starting Apify actor with directUrls");
 
-    // Use instagram-profile-scraper with directUrls parameter
+    // Use instagram-scraper actor which supports directUrls
     const actorRunResponse = await fetch(
-      "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs",
+      "https://api.apify.com/v2/acts/apify~instagram-scraper/runs",
       {
         method: "POST",
         headers: {
@@ -34,8 +34,8 @@ export const getPostOwnerTool = createTool({
         },
         body: JSON.stringify({
           directUrls: [postUrl],
-          resultsType: "posts",
           resultsLimit: 1,
+          resultsType: "posts",
         }),
       },
     );
@@ -64,7 +64,7 @@ export const getPostOwnerTool = createTool({
       await new Promise((resolve) => setTimeout(resolve, 3000));
 
       const statusResponse = await fetch(
-        `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs/${runId}`,
+        `https://api.apify.com/v2/acts/apify~instagram-scraper/runs/${runId}`,
         {
           headers: {
             Authorization: `Bearer ${apifyApiKey}`,
