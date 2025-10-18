@@ -69,6 +69,7 @@ export const sendSingleViralReelTool = createTool({
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
+    const threadId = process.env.TELEGRAM_THREAD_ID;
 
     if (!botToken) {
       throw new Error("TELEGRAM_BOT_TOKEN is not set");
@@ -79,6 +80,11 @@ export const sendSingleViralReelTool = createTool({
     }
 
     const bot = new Telegraf(botToken);
+
+    logger?.info("📝 [SendSingleViral] Telegram settings", {
+      chatId,
+      threadId: threadId || "основной чат (без ветки)",
+    });
 
     const message = `
 🔥 *ВИРУСНЫЙ РИЛС НАЙДЕН!*
@@ -105,6 +111,7 @@ _⚠️ Данные могут быть не актуальны, проверя
     try {
       const result = await bot.telegram.sendMessage(chatId, message, {
         parse_mode: "Markdown",
+        message_thread_id: threadId ? parseInt(threadId) : undefined,
       });
 
       logger?.info("✅ [SendSingleViral] Message sent successfully", {
