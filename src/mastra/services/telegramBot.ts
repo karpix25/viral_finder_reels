@@ -1,5 +1,6 @@
 import { Telegraf } from "telegraf";
 import { addAccountToSheetsTool } from "../tools/addAccountToSheetsTool";
+import { getPostOwnerTool } from "../tools/getPostOwnerTool";
 import { RuntimeContext } from "@mastra/core/di";
 import type { Mastra } from "@mastra/core";
 
@@ -127,14 +128,33 @@ export async function startTelegramBot(mastra: Mastra) {
 
       // Process each URL
       for (const url of instagramUrls) {
-        const username = extractInstagramUsername(url);
+        let username = extractInstagramUsername(url);
 
+        // If we couldn't extract username from URL, try using Apify
         if (!username) {
-          logger?.warn("⚠️ [TelegramBot] Could not extract username from URL", {
+          logger?.info("⚠️ [TelegramBot] Could not extract username from URL, trying Apify", {
             url,
           });
-          failedAccounts.push(`${url} (не удалось извлечь username)`);
-          continue;
+          
+          try {
+            const postOwner = await getPostOwnerTool.execute({
+              context: { postUrl: url },
+              runtimeContext,
+              mastra,
+            });
+            username = postOwner.username;
+            logger?.info("✅ [TelegramBot] Got username from Apify", {
+              username,
+              url,
+            });
+          } catch (error: any) {
+            logger?.error("❌ [TelegramBot] Failed to get username from Apify", {
+              url,
+              error: error.message,
+            });
+            failedAccounts.push(`${url} (не удалось получить username)`);
+            continue;
+          }
         }
         
         // Validate username format (Instagram usernames are alphanumeric + dots + underscores)
@@ -147,7 +167,7 @@ export async function startTelegramBot(mastra: Mastra) {
           continue;
         }
 
-        logger?.info("📝 [TelegramBot] Extracted username", {
+        logger?.info("📝 [TelegramBot] Processing username", {
           username,
           url,
         });

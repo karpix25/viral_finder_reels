@@ -15,6 +15,7 @@ import { scrapeInstagramTool } from "./tools/scrapeInstagramTool";
 import { analyzeViralReelsTool } from "./tools/analyzeViralReelsTool";
 import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool";
 import { addAccountToSheetsTool } from "./tools/addAccountToSheetsTool";
+import { getPostOwnerTool } from "./tools/getPostOwnerTool";
 import { startTelegramBot } from "./services/telegramBot";
 
 class ProductionPinoLogger extends MastraLogger {
@@ -77,6 +78,7 @@ export const mastra = new Mastra({
         analyzeViralReelsTool,
         sendTelegramMessageTool,
         addAccountToSheetsTool,
+        getPostOwnerTool,
       },
     }),
   },
