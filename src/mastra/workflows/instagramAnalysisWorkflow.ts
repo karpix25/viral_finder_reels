@@ -153,8 +153,8 @@ const stepProcessAccountsAndSendFindings = createStep({
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-          // Check if viral (3x higher than average and within 3 days)
-          if (growthMultiplier >= 3.0) {
+          // Check if viral (3x higher than average, within 3 days, AND minimum 500k views)
+          if (growthMultiplier >= 3.0 && reel.viewCount >= 500000) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
               reelUrl: reel.url,
@@ -162,6 +162,7 @@ const stepProcessAccountsAndSendFindings = createStep({
               growthMultiplier: growthMultiplier.toFixed(1),
               viewCount: reel.viewCount,
               averageViews,
+              minimumViewsThreshold: 500000,
             });
 
             // Send immediately to Telegram
