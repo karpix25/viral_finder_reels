@@ -69,7 +69,8 @@ export const sendSingleViralReelTool = createTool({
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    const threadId = process.env.TELEGRAM_THREAD_ID;
+    // Viral posts go to main chat WITHOUT thread
+    // (thread ID is only for account additions)
 
     if (!botToken) {
       throw new Error("TELEGRAM_BOT_TOKEN is not set");
@@ -83,7 +84,7 @@ export const sendSingleViralReelTool = createTool({
 
     logger?.info("📝 [SendSingleViral] Telegram settings", {
       chatId,
-      threadId: threadId || "основной чат (без ветки)",
+      thread: "основной чат (без ветки)",
     });
 
     // Escape HTML characters in caption
@@ -116,9 +117,9 @@ ${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
 `.trim();
 
     try {
+      // Send to main chat without thread ID
       const result = await bot.telegram.sendMessage(chatId, message, {
         parse_mode: "HTML",
-        message_thread_id: threadId ? parseInt(threadId) : undefined,
       });
 
       logger?.info("✅ [SendSingleViral] Message sent successfully", {
