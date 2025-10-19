@@ -46,6 +46,14 @@ function extractInstagramUrls(text: string): string[] {
 
 export async function startTelegramBot(mastra: Mastra) {
   const logger = mastra.getLogger();
+  
+  // Don't start Telegram bot in production deployment
+  // (it's already running locally and can't run in two places)
+  if (process.env.NODE_ENV === "production") {
+    logger?.info("⚠️ [TelegramBot] Skipping Telegram bot in production deployment");
+    return;
+  }
+  
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   
   if (!botToken) {
