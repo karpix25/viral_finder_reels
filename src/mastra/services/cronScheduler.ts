@@ -5,6 +5,10 @@ import { instagramAnalysisWorkflow } from "../workflows/instagramAnalysisWorkflo
 export function startCronScheduler(mastra: Mastra) {
   const logger = mastra.getLogger();
   
+  logger?.info("⏰ [CronScheduler] startCronScheduler called", {
+    nodeEnv: process.env.NODE_ENV,
+  });
+  
   // Don't start cron scheduler in development (Inngest Dev Server handles it)
   if (process.env.NODE_ENV !== "production") {
     logger?.info("⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)");
