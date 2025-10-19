@@ -61,7 +61,7 @@ class ProductionPinoLogger extends MastraLogger {
 }
 
 registerCronWorkflow(
-  `TZ=${process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow"} ${process.env.SCHEDULE_CRON_EXPRESSION || "0 9 * * *"}`,
+  `TZ=${process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow"} ${process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"}`,
   instagramAnalysisWorkflow,
 );
 
