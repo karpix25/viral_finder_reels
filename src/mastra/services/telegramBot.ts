@@ -203,7 +203,7 @@ export async function startTelegramBot(mastra: Mastra) {
         }
       }
 
-      // Send response message
+      // Send response message to specific chat/thread
       let responseMessage = "";
 
       if (addedAccounts.length > 0) {
@@ -227,11 +227,39 @@ export async function startTelegramBot(mastra: Mastra) {
         // Add a small delay to avoid Telegram rate limiting
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        await ctx.reply(responseMessage.trim(), {
-          reply_parameters: {
-            message_id: message.message_id,
-          },
-        });
+        // Send to specific chat/thread if configured, otherwise reply in current chat
+        const notificationChatId = process.env.TELEGRAM_ACCOUNTS_CHAT_ID;
+        const notificationThreadId = process.env.TELEGRAM_ACCOUNTS_THREAD_ID;
+        
+        if (notificationChatId) {
+          logger?.info("📤 [TelegramBot] Sending notification to configured chat/thread", {
+            chatId: notificationChatId,
+            threadId: notificationThreadId || "основной чат",
+          });
+          
+          try {
+            await bot.telegram.sendMessage(notificationChatId, responseMessage.trim(), {
+              message_thread_id: notificationThreadId ? parseInt(notificationThreadId) : undefined,
+            });
+          } catch (error: any) {
+            logger?.error("❌ [TelegramBot] Failed to send to configured chat, falling back to reply", {
+              error: error.message,
+            });
+            // Fallback to reply in current chat
+            await ctx.reply(responseMessage.trim(), {
+              reply_parameters: {
+                message_id: message.message_id,
+              },
+            });
+          }
+        } else {
+          // No specific chat configured, reply in current chat
+          await ctx.reply(responseMessage.trim(), {
+            reply_parameters: {
+              message_id: message.message_id,
+            },
+          });
+        }
       }
     } catch (error: any) {
       logger?.error("❌ [TelegramBot] Error processing message", {
