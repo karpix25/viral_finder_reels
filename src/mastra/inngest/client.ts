@@ -7,6 +7,8 @@ export const inngest = new Inngest(
     ? {
         id: "replit-agent-workflow",
         name: "Replit Agent Workflow System",
+        // In production, use Inngest Cloud with signing key
+        eventKey: process.env.INNGEST_EVENT_KEY,
       }
     : {
         id: "mastra",
@@ -18,3 +20,7 @@ export const inngest = new Inngest(
 
 // Log Inngest configuration for debugging
 console.log('🔧 Inngest initialized:', process.env.NODE_ENV === "production" ? 'PRODUCTION' : 'DEVELOPMENT');
+console.log('🔑 Inngest keys present:', {
+  hasEventKey: !!process.env.INNGEST_EVENT_KEY,
+  hasSigningKey: !!process.env.INNGEST_SIGNING_KEY,
+});
