@@ -139,19 +139,23 @@ const stepProcessAccountsAndSendFindings = createStep({
         // Determine adaptive criteria based on account size
         const followersCount = accountData.followersCount;
         let minimumViews: number;
+        let minimumEngagement: number; // likes + comments
         let accountSizeCategory: string;
 
         if (followersCount < 100000) {
-          // Small accounts: 50K minimum views
+          // Small accounts
           minimumViews = 50000;
+          minimumEngagement = 5000; // 5K engagement
           accountSizeCategory = "Малый";
         } else if (followersCount < 1000000) {
-          // Medium accounts: 200K minimum views
+          // Medium accounts
           minimumViews = 200000;
+          minimumEngagement = 20000; // 20K engagement
           accountSizeCategory = "Средний";
         } else {
-          // Large accounts: 500K minimum views
+          // Large accounts
           minimumViews = 500000;
+          minimumEngagement = 50000; // 50K engagement
           accountSizeCategory = "Большой";
         }
 
@@ -160,6 +164,7 @@ const stepProcessAccountsAndSendFindings = createStep({
           followersCount,
           accountSizeCategory,
           minimumViews,
+          minimumEngagement,
         });
 
         // Check each reel
@@ -175,21 +180,40 @@ const stepProcessAccountsAndSendFindings = createStep({
             continue;
           }
 
-          // Calculate growth multiplier for statistics
+          // Calculate metrics
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
+          const engagement = reel.likeCount + reel.commentCount;
 
-          // Check if viral using minimum views only
-          if (reel.viewCount >= minimumViews) {
+          // DUAL-ALGORITHM VIRALITY CHECK
+          // Primary: Use views if available (viewCount > 0)
+          // Fallback: Use engagement (likes + comments)
+          let isViral = false;
+          let viralityReason = "";
+
+          if (reel.viewCount > 0 && reel.viewCount >= minimumViews) {
+            // Primary algorithm: Views-based
+            isViral = true;
+            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViews.toLocaleString()}`;
+          } else if (engagement >= minimumEngagement) {
+            // Fallback algorithm: Engagement-based
+            isViral = true;
+            viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagement.toLocaleString()}`;
+          }
+
+          if (isViral) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
               reelUrl: reel.url,
               ageInDays,
+              viralityReason,
               growthMultiplier: growthMultiplier.toFixed(1),
               viewCount: reel.viewCount,
+              engagement,
               averageViews,
               accountSizeCategory,
               minimumViewsThreshold: minimumViews,
+              minimumEngagementThreshold: minimumEngagement,
             });
 
             // Send immediately to Telegram
