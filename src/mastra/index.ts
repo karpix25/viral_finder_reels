@@ -18,6 +18,7 @@ import { sendSingleViralReelTool } from "./tools/sendSingleViralReelTool";
 import { addAccountToSheetsTool } from "./tools/addAccountToSheetsTool";
 import { getPostOwnerTool } from "./tools/getPostOwnerTool";
 import { startTelegramBot } from "./services/telegramBot";
+import { startCronScheduler } from "./services/cronScheduler";
 
 class ProductionPinoLogger extends MastraLogger {
   protected logger: pino.Logger;
@@ -60,10 +61,14 @@ class ProductionPinoLogger extends MastraLogger {
   }
 }
 
-registerCronWorkflow(
-  `TZ=${process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow"} ${process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"}`,
-  instagramAnalysisWorkflow,
-);
+// Register cron workflow for development (Inngest Dev Server)
+// In production, we use the simple cron scheduler instead
+if (process.env.NODE_ENV !== "production") {
+  registerCronWorkflow(
+    `TZ=${process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow"} ${process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"}`,
+    instagramAnalysisWorkflow,
+  );
+}
 
 export const mastra = new Mastra({
   storage: sharedPostgresStorage,
@@ -180,3 +185,6 @@ startTelegramBot(mastra).catch((error) => {
     error: error.message,
   });
 });
+
+// Start cron scheduler for production deployments
+startCronScheduler(mastra);

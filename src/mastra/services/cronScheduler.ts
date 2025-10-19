@@ -1,0 +1,61 @@
+import cron from "node-cron";
+import type { Mastra } from "@mastra/core";
+import { instagramAnalysisWorkflow } from "../workflows/instagramAnalysisWorkflow";
+
+export function startCronScheduler(mastra: Mastra) {
+  const logger = mastra.getLogger();
+  
+  // Don't start cron scheduler in development (Inngest Dev Server handles it)
+  if (process.env.NODE_ENV !== "production") {
+    logger?.info("⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)");
+    return;
+  }
+  
+  const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour
+  const timezone = process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow";
+  
+  logger?.info("⏰ [CronScheduler] Starting cron scheduler", {
+    expression: cronExpression,
+    timezone,
+  });
+
+  // Schedule the workflow
+  const task = cron.schedule(
+    cronExpression,
+    async () => {
+      logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
+      
+      try {
+        const run = await instagramAnalysisWorkflow.createRunAsync();
+        const result = await run.start({ inputData: {} });
+        
+        logger?.info("✅ [CronScheduler] Workflow completed successfully", {
+          result,
+        });
+      } catch (error: any) {
+        logger?.error("❌ [CronScheduler] Workflow failed", {
+          error: error.message,
+          stack: error.stack,
+        });
+      }
+    },
+    {
+      timezone,
+    }
+  );
+  
+  // Start the task immediately
+  task.start();
+
+  logger?.info("✅ [CronScheduler] Cron scheduler started successfully");
+
+  // Graceful shutdown
+  process.once("SIGINT", () => {
+    logger?.info("⏰ [CronScheduler] Stopping cron scheduler...");
+    task.stop();
+  });
+  process.once("SIGTERM", () => {
+    logger?.info("⏰ [CronScheduler] Stopping cron scheduler...");
+    task.stop();
+  });
+}
