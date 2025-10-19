@@ -5,20 +5,20 @@ import { instagramAnalysisWorkflow } from "../workflows/instagramAnalysisWorkflo
 export function startCronScheduler(mastra: Mastra) {
   const logger = mastra.getLogger();
   
-  logger?.info("⏰ [CronScheduler] startCronScheduler called", {
+  console.log("⏰ [CronScheduler] startCronScheduler called", {
     nodeEnv: process.env.NODE_ENV,
   });
   
   // Don't start cron scheduler in development (Inngest Dev Server handles it)
   if (process.env.NODE_ENV !== "production") {
-    logger?.info("⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)");
+    console.log("⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)");
     return;
   }
   
   const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour
   const timezone = process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow";
   
-  logger?.info("⏰ [CronScheduler] Starting cron scheduler", {
+  console.log("⏰ [CronScheduler] Starting cron scheduler", {
     expression: cronExpression,
     timezone,
   });
