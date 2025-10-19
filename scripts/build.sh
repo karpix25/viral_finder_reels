@@ -11,12 +11,19 @@ mkdir -p .mastra/output
 # This ensures all stdout/stderr flows directly without buffering
 cat > .mastra/output/index.mjs << 'EOF'
 import { exec } from 'child_process';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const projectRoot = join(__dirname, '../..');
 
 console.log('🚀 Starting Mastra production server with runtime bundling...');
 
 // Use exec with direct stdio to ensure logs flow properly
+// Run from project root so mastra can find src/mastra/index.ts
 const mastraProcess = exec('NODE_ENV=production npx mastra dev', {
-  cwd: process.cwd(),
+  cwd: projectRoot,
   env: {
     ...process.env,
     NODE_ENV: 'production',
