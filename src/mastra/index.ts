@@ -149,6 +149,42 @@ export const mastra = new Mastra({
         // 3. Establishing a publish-subscribe system for real-time monitoring
         //    through the workflow:${workflowId}:${runId} channel
       },
+      // API endpoint to add Instagram accounts to Google Sheets
+      {
+        path: "/api/add-account",
+        method: "POST",
+        createHandler: async ({ mastra }) => {
+          const { RuntimeContext } = await import("@mastra/core/di");
+          
+          return async (c) => {
+            const logger = mastra.getLogger();
+            try {
+              const body = await c.req.json();
+              const { username } = body;
+              
+              if (!username) {
+                return c.json({ error: "username is required" }, 400);
+              }
+              
+              logger?.info("📝 [API] Adding account", { username });
+              
+              const runtimeContext = new RuntimeContext();
+              const result = await addAccountToSheetsTool.execute({
+                context: { username },
+                runtimeContext,
+                mastra,
+              });
+              
+              return c.json({ success: true, added: result.added, username });
+            } catch (error: any) {
+              logger?.error("❌ [API] Error adding account", {
+                error: error.message,
+              });
+              return c.json({ error: error.message }, 500);
+            }
+          };
+        },
+      },
     ],
   },
   logger:
@@ -180,11 +216,18 @@ if (Object.keys(mastra.getAgents()).length > 1) {
 }
 
 // Start Telegram bot for processing viral reels from group chat
-startTelegramBot(mastra).catch((error) => {
-  mastra.getLogger()?.error("❌ [Main] Failed to start Telegram bot", {
-    error: error.message,
+// Note: Telegram only allows ONE polling connection per token
+// If bot fails to start, it's likely already running somewhere else
+if (process.env.NODE_ENV !== "production") {
+  startTelegramBot(mastra).catch((error) => {
+    const logger = mastra.getLogger();
+    logger?.error("❌ [Main] Failed to start Telegram bot", {
+      error: error.message,
+    });
+    logger?.warn("⚠️ [Main] Telegram bot not started - continuing without it");
+    logger?.warn("💡 [Main] To add accounts, use Google Sheets directly or curl API");
   });
-});
+}
 
 // Start cron scheduler for production deployments
 console.log("🔧 [Main] About to start CronScheduler", {

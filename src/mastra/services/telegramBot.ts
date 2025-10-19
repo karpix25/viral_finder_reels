@@ -281,13 +281,27 @@ export async function startTelegramBot(mastra: Mastra) {
   logger?.info("🚀 [TelegramBot] Launching bot with polling...");
   
   try {
-    await bot.launch();
+    // Add timeout to detect hanging bot launch
+    const launchTimeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Bot launch timeout (30s)")), 30000)
+    );
+    
+    await Promise.race([bot.launch(), launchTimeout]);
     logger?.info("✅ [TelegramBot] Bot is ready to receive messages");
   } catch (error: any) {
     logger?.error("❌ [TelegramBot] Failed to launch bot", {
       error: error.message,
       stack: error.stack,
     });
+    
+    // Log specific Telegram API errors
+    if (error.response) {
+      logger?.error("❌ [TelegramBot] Telegram API error", {
+        statusCode: error.response.statusCode,
+        description: error.response.description,
+      });
+    }
+    
     throw error;
   }
 
