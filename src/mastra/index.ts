@@ -187,4 +187,16 @@ startTelegramBot(mastra).catch((error) => {
 });
 
 // Start cron scheduler for production deployments
-startCronScheduler(mastra);
+mastra.getLogger()?.info("🔧 [Main] About to start CronScheduler", {
+  nodeEnv: process.env.NODE_ENV,
+});
+
+try {
+  startCronScheduler(mastra);
+  mastra.getLogger()?.info("✅ [Main] CronScheduler started successfully");
+} catch (error: any) {
+  mastra.getLogger()?.error("❌ [Main] Failed to start CronScheduler", {
+    error: error.message,
+    stack: error.stack,
+  });
+}
