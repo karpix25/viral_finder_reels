@@ -15,3 +15,6 @@ export const inngest = new Inngest(
         middleware: [realtimeMiddleware()],
       },
 );
+
+// Log Inngest configuration for debugging
+console.log('🔧 Inngest initialized:', process.env.NODE_ENV === "production" ? 'PRODUCTION' : 'DEVELOPMENT');
