@@ -175,8 +175,8 @@ const stepProcessAccountsAndSendFindings = createStep({
             (now.getTime() - reelDate.getTime()) / (1000 * 60 * 60 * 24),
           );
 
-          // Skip if older than 5 days
-          if (ageInDays > 5) {
+          // Skip if older than 14 days
+          if (ageInDays > 14) {
             continue;
           }
 
