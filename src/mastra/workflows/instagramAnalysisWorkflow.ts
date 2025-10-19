@@ -138,23 +138,19 @@ const stepProcessAccountsAndSendFindings = createStep({
 
         // Determine adaptive criteria based on account size
         const followersCount = accountData.followersCount;
-        let requiredMultiplier: number;
         let minimumViews: number;
         let accountSizeCategory: string;
 
         if (followersCount < 100000) {
-          // Small accounts: 5x growth + 50K minimum views
-          requiredMultiplier = 5.0;
+          // Small accounts: 50K minimum views
           minimumViews = 50000;
           accountSizeCategory = "Малый";
         } else if (followersCount < 1000000) {
-          // Medium accounts: 4x growth + 200K minimum views
-          requiredMultiplier = 4.0;
+          // Medium accounts: 200K minimum views
           minimumViews = 200000;
           accountSizeCategory = "Средний";
         } else {
-          // Large accounts: 3x growth + 500K minimum views
-          requiredMultiplier = 3.0;
+          // Large accounts: 500K minimum views
           minimumViews = 500000;
           accountSizeCategory = "Большой";
         }
@@ -163,7 +159,6 @@ const stepProcessAccountsAndSendFindings = createStep({
           username: accountData.username,
           followersCount,
           accountSizeCategory,
-          requiredMultiplier,
           minimumViews,
         });
 
@@ -180,12 +175,12 @@ const stepProcessAccountsAndSendFindings = createStep({
             continue;
           }
 
-          // Calculate growth multiplier
+          // Calculate growth multiplier for statistics
           const growthMultiplier =
             averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-          // Check if viral using adaptive criteria
-          if (growthMultiplier >= requiredMultiplier && reel.viewCount >= minimumViews) {
+          // Check if viral using minimum views only
+          if (reel.viewCount >= minimumViews) {
             logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
               username: accountData.username,
               reelUrl: reel.url,
@@ -194,7 +189,6 @@ const stepProcessAccountsAndSendFindings = createStep({
               viewCount: reel.viewCount,
               averageViews,
               accountSizeCategory,
-              requiredMultiplier,
               minimumViewsThreshold: minimumViews,
             });
 
