@@ -7,48 +7,48 @@ echo "Creating lightweight production wrapper..."
 # Create output directory if it doesn't exist
 mkdir -p .mastra/output
 
-# Create a simple index.mjs that starts Mastra dev server
-# This allows us to use runtime bundling instead of heavy pre-build
+# Create a minimal wrapper that uses exec to replace the process
+# This ensures all stdout/stderr flows directly without buffering
 cat > .mastra/output/index.mjs << 'EOF'
-import { spawn } from 'child_process';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-const projectRoot = join(__dirname, '../..');
+import { exec } from 'child_process';
 
 console.log('🚀 Starting Mastra production server with runtime bundling...');
 
-// Start mastra dev in production mode
-const mastra = spawn('npx', ['mastra', 'dev'], {
-  cwd: projectRoot,
-  stdio: 'inherit',
+// Use exec with direct stdio to ensure logs flow properly
+const mastraProcess = exec('NODE_ENV=production npx mastra dev', {
+  cwd: process.cwd(),
   env: {
     ...process.env,
-    NODE_ENV: 'production'
+    NODE_ENV: 'production',
+    FORCE_COLOR: '1'  // Ensure colors work in logs
   }
 });
 
-mastra.on('error', (err) => {
+// Pipe stdout and stderr directly to console
+mastraProcess.stdout.pipe(process.stdout);
+mastraProcess.stderr.pipe(process.stderr);
+
+mastraProcess.on('error', (err) => {
   console.error('Failed to start Mastra:', err);
   process.exit(1);
 });
 
-mastra.on('exit', (code) => {
-  console.log(`Mastra exited with code ${code}`);
+mastraProcess.on('exit', (code) => {
+  if (code !== 0) {
+    console.log(`Mastra exited with code ${code}`);
+  }
   process.exit(code || 0);
 });
 
 // Handle graceful shutdown
 process.on('SIGTERM', () => {
   console.log('Received SIGTERM, stopping Mastra...');
-  mastra.kill('SIGTERM');
+  mastraProcess.kill('SIGTERM');
 });
 
 process.on('SIGINT', () => {
   console.log('Received SIGINT, stopping Mastra...');
-  mastra.kill('SIGINT');
+  mastraProcess.kill('SIGINT');
 });
 EOF
 
