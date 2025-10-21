@@ -30,17 +30,40 @@ export function startCronScheduler(mastra: Mastra) {
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
-        const run = await instagramAnalysisWorkflow.createRunAsync();
-        const result = await run.start({ inputData: {} });
+        // Try direct API call first (more reliable than Inngest SDK)
+        const baseUrl = process.env.REPLIT_DEV_DOMAIN 
+          ? `https://${process.env.REPLIT_DEV_DOMAIN}`
+          : 'http://localhost:5000';
         
-        logger?.info("✅ [CronScheduler] Workflow completed successfully", {
-          result,
+        logger?.info("📡 [CronScheduler] Triggering workflow via API", { baseUrl });
+        
+        const response = await fetch(`${baseUrl}/api/workflows/instagram-viral-analysis/start-async`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            inputData: {},
+            runtimeContext: {}
+          })
+        });
+        
+        if (!response.ok) {
+          throw new Error(`API returned ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        
+        logger?.info("✅ [CronScheduler] Workflow triggered successfully", {
+          runId: result.runId,
+          status: result.status,
         });
       } catch (error: any) {
         logger?.error("❌ [CronScheduler] Workflow failed", {
           error: error.message,
           stack: error.stack,
         });
+        
+        // Don't throw - let cron continue on next schedule
+        logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
       }
     },
     {
