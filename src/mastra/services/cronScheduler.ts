@@ -30,32 +30,20 @@ export function startCronScheduler(mastra: Mastra) {
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
-        // Try direct API call first (more reliable than Inngest SDK)
-        const baseUrl = process.env.REPLIT_DEV_DOMAIN 
-          ? `https://${process.env.REPLIT_DEV_DOMAIN}`
-          : 'http://localhost:5000';
+        // Use Inngest event to trigger the workflow (more reliable)
+        const { inngest } = await import("../inngest/client");
         
-        logger?.info("📡 [CronScheduler] Triggering workflow via API", { baseUrl });
+        logger?.info("📡 [CronScheduler] Sending event to Inngest");
         
-        const response = await fetch(`${baseUrl}/api/workflows/instagram-viral-analysis/start-async`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ 
+        await inngest.send({
+          name: "workflow.instagram-viral-analysis",
+          data: {
             inputData: {},
-            runtimeContext: {}
-          })
+            runId: `manual-${Date.now()}`,
+          },
         });
         
-        if (!response.ok) {
-          throw new Error(`API returned ${response.status}: ${response.statusText}`);
-        }
-        
-        const result = await response.json();
-        
-        logger?.info("✅ [CronScheduler] Workflow triggered successfully", {
-          runId: result.runId,
-          status: result.status,
-        });
+        logger?.info("✅ [CronScheduler] Workflow event sent successfully");
       } catch (error: any) {
         logger?.error("❌ [CronScheduler] Workflow failed", {
           error: error.message,
