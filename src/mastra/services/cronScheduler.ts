@@ -30,20 +30,17 @@ export function startCronScheduler(mastra: Mastra) {
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
-        // Use Inngest event to trigger the workflow (more reliable)
-        const { inngest } = await import("../inngest/client");
+        logger?.info("📡 [CronScheduler] Executing workflow directly");
         
-        logger?.info("📡 [CronScheduler] Sending event to Inngest");
-        
-        await inngest.send({
-          name: "workflow.instagram-viral-analysis",
-          data: {
-            inputData: {},
-            runId: `manual-${Date.now()}`,
-          },
+        // Execute workflow directly (more reliable in production)
+        const result = await instagramAnalysisWorkflow.execute({
+          inputData: {},
+          runtimeContext: {},
         });
         
-        logger?.info("✅ [CronScheduler] Workflow event sent successfully");
+        logger?.info("✅ [CronScheduler] Workflow completed successfully", {
+          result: result ? "success" : "no result",
+        });
       } catch (error: any) {
         logger?.error("❌ [CronScheduler] Workflow failed", {
           error: error.message,
