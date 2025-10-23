@@ -215,19 +215,17 @@ if (Object.keys(mastra.getAgents()).length > 1) {
   );
 }
 
-// Start Telegram bot for processing viral reels from group chat
+// Start Telegram bot for processing Instagram links from group chat
 // Note: Telegram only allows ONE polling connection per token
-// If bot fails to start, it's likely already running somewhere else
-if (process.env.NODE_ENV !== "production") {
-  startTelegramBot(mastra).catch((error) => {
-    const logger = mastra.getLogger();
-    logger?.error("❌ [Main] Failed to start Telegram bot", {
-      error: error.message,
-    });
-    logger?.warn("⚠️ [Main] Telegram bot not started - continuing without it");
-    logger?.warn("💡 [Main] To add accounts, use Google Sheets directly or curl API");
+// The bot should run in production to process links automatically
+startTelegramBot(mastra).catch((error) => {
+  const logger = mastra.getLogger();
+  logger?.error("❌ [Main] Failed to start Telegram bot", {
+    error: error.message,
   });
-}
+  logger?.warn("⚠️ [Main] Telegram bot not started - continuing without it");
+  logger?.warn("💡 [Main] To add accounts, use Google Sheets directly or curl API");
+});
 
 // Start cron scheduler for production deployments
 console.log("🔧 [Main] About to start CronScheduler", {
