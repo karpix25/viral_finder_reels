@@ -18,7 +18,7 @@ SCRIPT_EOF
 
 chmod +x .mastra/output/start-production.sh
 
-# Create index.mjs that spawns tsx with NODE_ENV=production
+# Create simple index.mjs that runs mastra dev with NODE_ENV=production
 cat > .mastra/output/index.mjs << 'EOF'
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -27,14 +27,16 @@ import { dirname, join } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
-const mastraEntry = join(projectRoot, 'src/mastra/index.ts');
 
 console.log('🚀 [Wrapper] Starting Mastra in PRODUCTION mode');
 console.log('📝 [Wrapper] Project root:', projectRoot);
-console.log('📝 [Wrapper] Entry point:', mastraEntry);
 
-// Spawn tsx with NODE_ENV=production
-const child = spawn('npx', ['tsx', mastraEntry], {
+// Run mastra dev with NODE_ENV=production
+// This will:
+// 1. Bundle the code
+// 2. Start the web server on port 5000
+// 3. Enable cron scheduler (because NODE_ENV=production)
+const child = spawn('npx', ['mastra', 'dev'], {
   cwd: projectRoot,
   env: {
     ...process.env,
@@ -49,7 +51,9 @@ child.on('error', (err) => {
 });
 
 child.on('exit', (code) => {
-  console.log(`⏹️ [Wrapper] Process exited with code ${code}`);
+  if (code !== 0) {
+    console.log(`⏹️ [Wrapper] Process exited with code ${code}`);
+  }
   process.exit(code || 0);
 });
 
