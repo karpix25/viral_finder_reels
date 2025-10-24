@@ -2,61 +2,60 @@
 
 set -e
 
-echo "Creating lightweight production wrapper..."
+echo "📦 Creating production wrapper..."
 
-# Create output directory if it doesn't exist
+# Create output directory
 mkdir -p .mastra/output
 
-# Create a minimal wrapper that uses exec to replace the process
-# This ensures all stdout/stderr flows directly without buffering
+# Create production start script that explicitly sets NODE_ENV
+cat > .mastra/output/start-production.sh << 'SCRIPT_EOF'
+#!/bin/bash
+export NODE_ENV=production
+echo "🚀 Starting Mastra in PRODUCTION mode"
+echo "📝 NODE_ENV=$NODE_ENV"
+exec node index.mjs
+SCRIPT_EOF
+
+chmod +x .mastra/output/start-production.sh
+
+# Create index.mjs that spawns tsx with NODE_ENV=production
 cat > .mastra/output/index.mjs << 'EOF'
-import { exec } from 'child_process';
+import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
+const mastraEntry = join(projectRoot, 'src/mastra/index.ts');
 
-console.log('🚀 Starting Mastra production server with runtime bundling...');
+console.log('🚀 [Wrapper] Starting Mastra in PRODUCTION mode');
+console.log('📝 [Wrapper] Project root:', projectRoot);
+console.log('📝 [Wrapper] Entry point:', mastraEntry);
 
-// Use exec with direct stdio to ensure logs flow properly
-// Run from project root so mastra can find src/mastra/index.ts
-const mastraProcess = exec('NODE_ENV=production npx mastra dev', {
+// Spawn tsx with NODE_ENV=production
+const child = spawn('npx', ['tsx', mastraEntry], {
   cwd: projectRoot,
   env: {
     ...process.env,
     NODE_ENV: 'production',
-    FORCE_COLOR: '1'  // Ensure colors work in logs
-  }
+  },
+  stdio: 'inherit',
 });
 
-// Pipe stdout and stderr directly to console
-mastraProcess.stdout.pipe(process.stdout);
-mastraProcess.stderr.pipe(process.stderr);
-
-mastraProcess.on('error', (err) => {
-  console.error('Failed to start Mastra:', err);
+child.on('error', (err) => {
+  console.error('❌ [Wrapper] Failed to start:', err);
   process.exit(1);
 });
 
-mastraProcess.on('exit', (code) => {
-  if (code !== 0) {
-    console.log(`Mastra exited with code ${code}`);
-  }
+child.on('exit', (code) => {
+  console.log(`⏹️ [Wrapper] Process exited with code ${code}`);
   process.exit(code || 0);
 });
 
-// Handle graceful shutdown
-process.on('SIGTERM', () => {
-  console.log('Received SIGTERM, stopping Mastra...');
-  mastraProcess.kill('SIGTERM');
-});
-
-process.on('SIGINT', () => {
-  console.log('Received SIGINT, stopping Mastra...');
-  mastraProcess.kill('SIGINT');
-});
+// Graceful shutdown
+process.on('SIGTERM', () => child.kill('SIGTERM'));
+process.on('SIGINT', () => child.kill('SIGINT'));
 EOF
 
 echo "✅ Production wrapper created successfully!"
