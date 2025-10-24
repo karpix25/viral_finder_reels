@@ -270,35 +270,34 @@ export async function startTelegramBot(mastra: Mastra) {
     }
   });
 
-  // Start the bot
-  logger?.info("🚀 [TelegramBot] Launching bot with polling...");
+  // Start the bot asynchronously (don't block web server startup)
+  logger?.info("🚀 [TelegramBot] Launching bot with polling in background...");
   
-  try {
-    // Add timeout to detect hanging bot launch
-    const launchTimeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error("Bot launch timeout (30s)")), 30000)
-    );
-    
-    await Promise.race([bot.launch(), launchTimeout]);
-    logger?.info("✅ [TelegramBot] Bot is ready to receive messages");
-  } catch (error: any) {
-    logger?.error("❌ [TelegramBot] Failed to launch bot", {
-      error: error.message,
-      stack: error.stack,
-    });
-    
-    // Log specific Telegram API errors
-    if (error.response) {
-      logger?.error("❌ [TelegramBot] Telegram API error", {
-        statusCode: error.response.statusCode,
-        description: error.response.description,
+  // Launch bot in background without blocking
+  bot.launch()
+    .then(() => {
+      logger?.info("✅ [TelegramBot] Bot is ready to receive messages");
+    })
+    .catch((error: any) => {
+      logger?.error("❌ [TelegramBot] Failed to launch bot", {
+        error: error.message,
+        stack: error.stack,
       });
-    }
-    
-    throw error;
-  }
+      
+      // Log specific Telegram API errors
+      if (error.response) {
+        logger?.error("❌ [TelegramBot] Telegram API error", {
+          statusCode: error.response.statusCode,
+          description: error.response.description,
+        });
+      }
+      
+      logger?.warn("⚠️ [TelegramBot] Bot polling failed - continuing without it");
+    });
 
   // Enable graceful stop
   process.once("SIGINT", () => bot.stop("SIGINT"));
   process.once("SIGTERM", () => bot.stop("SIGTERM"));
+  
+  logger?.info("✅ [TelegramBot] Bot launch initiated in background, not blocking server");
 }
