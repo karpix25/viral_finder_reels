@@ -225,42 +225,111 @@ export async function startTelegramBot(mastra: Mastra) {
       }
 
       if (responseMessage) {
-        // Add a small delay to avoid Telegram rate limiting
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
         // Send to specific chat/thread if configured, otherwise reply in current chat
         const notificationChatId = process.env.TELEGRAM_ACCOUNTS_CHAT_ID;
         const notificationThreadId = process.env.TELEGRAM_ACCOUNTS_THREAD_ID;
         
-        if (notificationChatId) {
-          logger?.info("📤 [TelegramBot] Sending notification to configured chat/thread", {
-            chatId: notificationChatId,
-            threadId: notificationThreadId || "основной чат",
-          });
-          
-          try {
-            await bot.telegram.sendMessage(notificationChatId, responseMessage.trim(), {
-              message_thread_id: notificationThreadId ? parseInt(notificationThreadId) : undefined,
-            });
-          } catch (error: any) {
-            logger?.error("❌ [TelegramBot] Failed to send to configured chat, falling back to reply", {
-              error: error.message,
-            });
-            // Fallback to reply in current chat
-            await ctx.reply(responseMessage.trim(), {
-              reply_parameters: {
-                message_id: message.message_id,
-              },
-            });
+        // Retry logic with exponential backoff for rate limiting
+        const sendWithRetry = async (maxRetries = 3) => {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              // Add delay before each attempt (exponential backoff)
+              const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000); // Max 30 seconds
+              logger?.info("⏳ [TelegramBot] Waiting before sending", {
+                attempt,
+                delayMs: delay,
+              });
+              await new Promise(resolve => setTimeout(resolve, delay));
+              
+              if (notificationChatId) {
+                logger?.info("📤 [TelegramBot] Sending notification to configured chat/thread", {
+                  chatId: notificationChatId,
+                  threadId: notificationThreadId || "основной чат",
+                  attempt,
+                });
+                
+                await bot.telegram.sendMessage(notificationChatId, responseMessage.trim(), {
+                  message_thread_id: notificationThreadId ? parseInt(notificationThreadId) : undefined,
+                });
+                
+                logger?.info("✅ [TelegramBot] Notification sent successfully", {
+                  attempt,
+                });
+                return; // Success!
+              } else {
+                // No specific chat configured, reply in current chat
+                await ctx.reply(responseMessage.trim(), {
+                  reply_parameters: {
+                    message_id: message.message_id,
+                  },
+                });
+                return; // Success!
+              }
+            } catch (error: any) {
+              // Check if it's a rate limit error
+              if (error.message.includes("429") || error.message.includes("Too Many Requests")) {
+                // Extract retry_after from error if available
+                const retryAfterMatch = error.message.match(/retry after (\d+)/);
+                const retryAfter = retryAfterMatch ? parseInt(retryAfterMatch[1]) * 1000 : null;
+                
+                logger?.warn(`⚠️ [TelegramBot] Rate limited (attempt ${attempt}/${maxRetries})`, {
+                  error: error.message,
+                  retryAfter,
+                  willRetry: attempt < maxRetries,
+                });
+                
+                // If we have retryAfter time, wait for it
+                if (retryAfter && attempt < maxRetries) {
+                  logger?.info(`⏳ [TelegramBot] Waiting ${retryAfter}ms as requested by Telegram`);
+                  await new Promise(resolve => setTimeout(resolve, retryAfter));
+                  continue; // Retry
+                }
+                
+                // If this was the last attempt, fallback to reply
+                if (attempt === maxRetries && notificationChatId) {
+                  logger?.error("❌ [TelegramBot] Max retries reached, falling back to reply");
+                  try {
+                    await ctx.reply(responseMessage.trim(), {
+                      reply_parameters: {
+                        message_id: message.message_id,
+                      },
+                    });
+                    return;
+                  } catch (replyError: any) {
+                    logger?.error("❌ [TelegramBot] Fallback reply also failed", {
+                      error: replyError.message,
+                    });
+                  }
+                }
+              } else {
+                // Non-rate-limit error
+                logger?.error("❌ [TelegramBot] Failed to send notification", {
+                  error: error.message,
+                  attempt,
+                });
+                
+                // Fallback to reply on non-rate-limit errors
+                if (notificationChatId) {
+                  try {
+                    await ctx.reply(responseMessage.trim(), {
+                      reply_parameters: {
+                        message_id: message.message_id,
+                      },
+                    });
+                    return;
+                  } catch (replyError: any) {
+                    logger?.error("❌ [TelegramBot] Fallback reply also failed", {
+                      error: replyError.message,
+                    });
+                  }
+                }
+                return;
+              }
+            }
           }
-        } else {
-          // No specific chat configured, reply in current chat
-          await ctx.reply(responseMessage.trim(), {
-            reply_parameters: {
-              message_id: message.message_id,
-            },
-          });
-        }
+        };
+        
+        await sendWithRetry();
       }
     } catch (error: any) {
       logger?.error("❌ [TelegramBot] Error processing message", {
