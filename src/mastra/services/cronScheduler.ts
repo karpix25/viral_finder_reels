@@ -1,6 +1,6 @@
 import cron from "node-cron";
 import type { Mastra } from "@mastra/core";
-import { instagramAnalysisWorkflow } from "../workflows/instagramAnalysisWorkflow";
+import { executeInstagramAnalysis } from "../workflows/instagramAnalysisWorkflow";
 
 export function startCronScheduler(mastra: Mastra) {
   const logger = mastra.getLogger();
@@ -30,16 +30,15 @@ export function startCronScheduler(mastra: Mastra) {
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
-        logger?.info("📡 [CronScheduler] Executing workflow directly");
+        logger?.info("📡 [CronScheduler] Executing workflow logic directly (bypassing Inngest)");
         
-        // Execute workflow directly (more reliable in production)
-        const result = await instagramAnalysisWorkflow.execute({
-          inputData: {},
-          runtimeContext: {},
-        });
+        // Execute the core workflow logic directly
+        // This bypasses the Inngest wrapper which requires event context
+        const result = await executeInstagramAnalysis(mastra);
         
         logger?.info("✅ [CronScheduler] Workflow completed successfully", {
-          result: result ? "success" : "no result",
+          totalAccountsProcessed: result.totalAccountsProcessed,
+          totalViralReelsSent: result.totalViralReelsSent,
         });
       } catch (error: any) {
         logger?.error("❌ [CronScheduler] Workflow failed", {
