@@ -111,6 +111,16 @@ export async function startTelegramBot(mastra: Mastra) {
         return;
       }
 
+      // Only process messages from the specific monitoring chat
+      const monitoringChatId = process.env.TELEGRAM_ACCOUNTS_CHAT_ID;
+      if (monitoringChatId && chatId.toString() !== monitoringChatId) {
+        logger?.info("⚠️ [TelegramBot] Ignoring message from non-monitoring chat", {
+          chatId,
+          monitoringChatId,
+        });
+        return;
+      }
+
       // Extract Instagram URLs from the message
       const instagramUrls = extractInstagramUrls(text);
 

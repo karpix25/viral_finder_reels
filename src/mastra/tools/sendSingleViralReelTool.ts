@@ -68,9 +68,8 @@ export const sendSingleViralReelTool = createTool({
     });
 
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
+    // Viral posts go to TELEGRAM_CHAT_ID (References chat) WITHOUT thread
     const chatId = process.env.TELEGRAM_CHAT_ID;
-    // Viral posts go to main chat WITHOUT thread
-    // (thread ID is only for account additions)
 
     if (!botToken) {
       throw new Error("TELEGRAM_BOT_TOKEN is not set");
