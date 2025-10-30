@@ -9,12 +9,6 @@ export function startCronScheduler(mastra: Mastra) {
     nodeEnv: process.env.NODE_ENV,
   });
   
-  // Don't start cron scheduler in development (Inngest Dev Server handles it)
-  if (process.env.NODE_ENV !== "production") {
-    console.log("⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)");
-    return;
-  }
-  
   const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour
   const timezone = process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow";
   
