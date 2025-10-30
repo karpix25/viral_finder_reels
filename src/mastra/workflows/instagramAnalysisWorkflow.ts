@@ -13,7 +13,7 @@ const WORKFLOW_NAME = "instagram-viral-analysis";
 
 // Maximum accounts to process per workflow run to avoid timeout
 // For 1000+ accounts, run the workflow multiple times
-const MAX_ACCOUNTS_PER_RUN = 20;
+const MAX_ACCOUNTS_PER_RUN = 50;
 
 // Core workflow logic - can be called from step OR directly from cron scheduler
 export async function executeInstagramAnalysis(mastra: any) {
