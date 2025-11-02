@@ -11,9 +11,9 @@ import { eq } from "drizzle-orm";
 const runtimeContext = new RuntimeContext();
 const WORKFLOW_NAME = "instagram-viral-analysis";
 
-// Maximum accounts to process per workflow run to avoid timeout
-// For 1000+ accounts, run the workflow multiple times
-const MAX_ACCOUNTS_PER_RUN = 50;
+// Process ALL accounts in a single run
+// System handles 1000+ accounts efficiently with parallel processing
+const MAX_ACCOUNTS_PER_RUN = 100000;
 
 // Core workflow logic - can be called from step OR directly from cron scheduler
 export async function executeInstagramAnalysis(mastra: any) {
