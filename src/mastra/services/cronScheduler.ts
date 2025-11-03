@@ -9,18 +9,26 @@ export function startCronScheduler(mastra: Mastra) {
     nodeEnv: process.env.NODE_ENV,
   });
   
-  const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour
-  const timezone = process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow";
+  // Cron runs on UTC time (timezone option doesn't work in Replit)
+  const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour at :00
   
   console.log("⏰ [CronScheduler] Starting cron scheduler", {
     expression: cronExpression,
-    timezone,
+    note: "Running on UTC time",
   });
 
-  // Schedule the workflow
+  // Log current time for debugging
+  console.log("🕐 [CronScheduler] Current time", {
+    utc: new Date().toISOString(),
+  });
+
+  // Schedule the workflow (using UTC timezone)
   const task = cron.schedule(
     cronExpression,
     async () => {
+      console.log("⏰ [CronScheduler] CRON TRIGGERED!", {
+        time: new Date().toISOString(),
+      });
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
@@ -43,16 +51,16 @@ export function startCronScheduler(mastra: Mastra) {
         // Don't throw - let cron continue on next schedule
         logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
       }
-    },
-    {
-      timezone,
     }
+    // Removed timezone option - using UTC instead
   );
   
   // Start the task immediately
   task.start();
 
-  logger?.info("✅ [CronScheduler] Cron scheduler started successfully");
+  logger?.info("✅ [CronScheduler] Cron scheduler started successfully", {
+    note: "Workflow will run every hour at :00 minutes (UTC)",
+  });
 
   // Graceful shutdown
   process.once("SIGINT", () => {
