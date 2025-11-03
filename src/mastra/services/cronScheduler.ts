@@ -1,4 +1,3 @@
-import cron from "node-cron";
 import type { Mastra } from "@mastra/core";
 import { executeInstagramAnalysis } from "../workflows/instagramAnalysisWorkflow";
 
@@ -9,33 +8,34 @@ export function startCronScheduler(mastra: Mastra) {
     nodeEnv: process.env.NODE_ENV,
   });
   
-  // Cron runs on UTC time (timezone option doesn't work in Replit)
-  const cronExpression = process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"; // Every hour at :00
-  
-  console.log("⏰ [CronScheduler] Starting cron scheduler", {
-    expression: cronExpression,
-    note: "Running on UTC time",
-  });
-
-  // Log current time for debugging
+  console.log("⏰ [CronScheduler] Starting interval-based scheduler (node-cron doesn't work in Replit)");
   console.log("🕐 [CronScheduler] Current time", {
     utc: new Date().toISOString(),
   });
 
-  // Schedule the workflow (using UTC timezone)
-  const task = cron.schedule(
-    cronExpression,
-    async () => {
-      console.log("⏰ [CronScheduler] CRON TRIGGERED!", {
-        time: new Date().toISOString(),
+  let isRunning = false;
+  let lastRunHour = -1;
+
+  // Check every minute if we need to run
+  const intervalId = setInterval(async () => {
+    const now = new Date();
+    const currentHour = now.getUTCHours();
+    const currentMinute = now.getUTCMinutes();
+    
+    // PRODUCTION MODE: Run at :00 minutes of every hour, only once per hour
+    if (currentMinute === 0 && currentHour !== lastRunHour && !isRunning) {
+      lastRunHour = currentHour;
+      isRunning = true;
+      
+      console.log("⏰ [CronScheduler] HOURLY TRIGGER!", {
+        time: now.toISOString(),
+        hour: currentHour,
       });
       logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
       
       try {
-        logger?.info("📡 [CronScheduler] Executing workflow logic directly (bypassing Inngest)");
+        logger?.info("📡 [CronScheduler] Executing workflow logic directly");
         
-        // Execute the core workflow logic directly
-        // This bypasses the Inngest wrapper which requires event context
         const result = await executeInstagramAnalysis(mastra);
         
         logger?.info("✅ [CronScheduler] Workflow completed successfully", {
@@ -48,27 +48,25 @@ export function startCronScheduler(mastra: Mastra) {
           stack: error.stack,
         });
         
-        // Don't throw - let cron continue on next schedule
         logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
+      } finally {
+        isRunning = false;
       }
     }
-    // Removed timezone option - using UTC instead
-  );
-  
-  // Start the task immediately
-  task.start();
+  }, 60000); // Check every minute
 
-  logger?.info("✅ [CronScheduler] Cron scheduler started successfully", {
-    note: "Workflow will run every hour at :00 minutes (UTC)",
+  logger?.info("✅ [CronScheduler] Scheduler started successfully", {
+    note: "Running every hour at :00 minutes (UTC)",
+    checkInterval: "60 seconds",
   });
 
   // Graceful shutdown
   process.once("SIGINT", () => {
-    logger?.info("⏰ [CronScheduler] Stopping cron scheduler...");
-    task.stop();
+    logger?.info("⏰ [CronScheduler] Stopping scheduler...");
+    clearInterval(intervalId);
   });
   process.once("SIGTERM", () => {
-    logger?.info("⏰ [CronScheduler] Stopping cron scheduler...");
-    task.stop();
+    logger?.info("⏰ [CronScheduler] Stopping scheduler...");
+    clearInterval(intervalId);
   });
 }
