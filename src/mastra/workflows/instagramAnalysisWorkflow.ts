@@ -187,31 +187,35 @@ export async function executeInstagramAnalysis(mastra: any) {
           averageViews > 0 ? reel.viewCount / averageViews : 0;
         const engagement = reel.likeCount + reel.commentCount;
 
-        // TRIPLE-ALGORITHM VIRALITY CHECK WITH CAROUSEL STRICTNESS
-        // Carousels (Sidecar) need 3x higher thresholds than Reels/Videos
-        // 1. Views-based (absolute threshold)
-        // 2. Engagement-based (absolute threshold)
-        // 3. Growth-based (relative to account average)
+        // MULTI-ALGORITHM VIRALITY CHECK
+        // IMPORTANT: Carousels don't have viewCount - only engagement (likes + comments)
+        // Reels/Videos: Check by views OR engagement OR growth
+        // Carousels: Check ONLY by engagement (stricter thresholds)
         let isViral = false;
         let viralityReason = "";
         const isCarousel = reel.type === "Sidecar";
-        
-        // Choose thresholds based on content type
-        const viewsThreshold = isCarousel ? minimumViewsCarousel : minimumViews;
-        const engagementThreshold = isCarousel ? minimumEngagementCarousel : minimumEngagement;
 
-        if (reel.viewCount > 0 && reel.viewCount >= viewsThreshold) {
-          // Algorithm 1: Views-based
-          isViral = true;
-          viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${viewsThreshold.toLocaleString()} [${isCarousel ? 'Carousel' : 'Reel'}]`;
-        } else if (engagement >= engagementThreshold) {
-          // Algorithm 2: Engagement-based
-          isViral = true;
-          viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${engagementThreshold.toLocaleString()} [${isCarousel ? 'Carousel' : 'Reel'}]`;
-        } else if (!isCarousel && growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
-          // Algorithm 3: Growth-based (ONLY for Reels, not Carousels - they must meet absolute thresholds)
-          isViral = true;
-          viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()}) [Reel]`;
+        if (isCarousel) {
+          // CAROUSELS: Only engagement-based (no viewCount available)
+          if (engagement >= minimumEngagementCarousel) {
+            isViral = true;
+            viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagementCarousel.toLocaleString()} [Carousel]`;
+          }
+        } else {
+          // REELS/VIDEOS: Three algorithms
+          if (reel.viewCount > 0 && reel.viewCount >= minimumViews) {
+            // Algorithm 1: Views-based
+            isViral = true;
+            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViews.toLocaleString()} [Reel]`;
+          } else if (engagement >= minimumEngagement) {
+            // Algorithm 2: Engagement-based
+            isViral = true;
+            viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagement.toLocaleString()} [Reel]`;
+          } else if (growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
+            // Algorithm 3: Growth-based (3x above average + minimum 10K views)
+            isViral = true;
+            viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()}) [Reel]`;
+          }
         }
 
         if (isViral) {
