@@ -11,6 +11,7 @@ export const sendSingleViralReelTool = createTool({
   inputSchema: z.object({
     username: z.string(),
     reelUrl: z.string(),
+    contentType: z.string(), // "Reel", "Video", or "Sidecar" (carousel)
     caption: z.string().optional(),
     viewCount: z.number(),
     likeCount: z.number(),
@@ -29,6 +30,7 @@ export const sendSingleViralReelTool = createTool({
     const {
       username,
       reelUrl,
+      contentType,
       caption,
       viewCount,
       likeCount,
@@ -92,9 +94,13 @@ export const sendSingleViralReelTool = createTool({
     };
 
     const captionText = caption ? escapeHtml(caption.slice(0, 100) + (caption.length > 100 ? "..." : "")) : "";
+    
+    // Determine content emoji and name
+    const contentEmoji = contentType === "Sidecar" ? "🖼" : "🎬";
+    const contentName = contentType === "Sidecar" ? "КАРУСЕЛЬ" : "РИЛС";
 
     const message = `
-🔥 <b>ВИРУСНЫЙ РИЛС НАЙДЕН!</b>
+🔥 <b>ВИРУСНЫЙ ${contentName} НАЙДЕН!</b> ${contentEmoji}
 
 👤 <b>Аккаунт:</b> @${username}
 👥 <b>Подписчиков:</b> ${followersCount.toLocaleString()}

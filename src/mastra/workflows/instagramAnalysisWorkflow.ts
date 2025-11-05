@@ -132,22 +132,30 @@ export async function executeInstagramAnalysis(mastra: any) {
       const followersCount = accountData.followersCount;
       let minimumViews: number;
       let minimumEngagement: number; // likes + comments
+      let minimumViewsCarousel: number; // Higher thresholds for carousels
+      let minimumEngagementCarousel: number;
       let accountSizeCategory: string;
 
       if (followersCount < 100000) {
         // Small accounts - OPTIMIZED: 2x more sensitive
-        minimumViews = 25000; // Reduced from 50K
-        minimumEngagement = 2500; // Reduced from 5K
+        minimumViews = 25000; // Reels/Videos
+        minimumEngagement = 2500;
+        minimumViewsCarousel = 75000; // Carousels need 3x more (stricter)
+        minimumEngagementCarousel = 7500;
         accountSizeCategory = "Малый";
       } else if (followersCount < 1000000) {
         // Medium accounts - OPTIMIZED: 2x more sensitive
-        minimumViews = 100000; // Reduced from 200K
-        minimumEngagement = 10000; // Reduced from 20K
+        minimumViews = 100000; // Reels/Videos
+        minimumEngagement = 10000;
+        minimumViewsCarousel = 300000; // Carousels need 3x more (stricter)
+        minimumEngagementCarousel = 30000;
         accountSizeCategory = "Средний";
       } else {
         // Large accounts - OPTIMIZED: 2x more sensitive
-        minimumViews = 250000; // Reduced from 500K
-        minimumEngagement = 25000; // Reduced from 50K
+        minimumViews = 250000; // Reels/Videos
+        minimumEngagement = 25000;
+        minimumViewsCarousel = 750000; // Carousels need 3x more (stricter)
+        minimumEngagementCarousel = 75000;
         accountSizeCategory = "Большой";
       }
 
@@ -157,6 +165,8 @@ export async function executeInstagramAnalysis(mastra: any) {
         accountSizeCategory,
         minimumViews,
         minimumEngagement,
+        minimumViewsCarousel,
+        minimumEngagementCarousel,
       });
 
       // Check each reel
@@ -177,25 +187,31 @@ export async function executeInstagramAnalysis(mastra: any) {
           averageViews > 0 ? reel.viewCount / averageViews : 0;
         const engagement = reel.likeCount + reel.commentCount;
 
-        // TRIPLE-ALGORITHM VIRALITY CHECK
+        // TRIPLE-ALGORITHM VIRALITY CHECK WITH CAROUSEL STRICTNESS
+        // Carousels (Sidecar) need 3x higher thresholds than Reels/Videos
         // 1. Views-based (absolute threshold)
         // 2. Engagement-based (absolute threshold)
         // 3. Growth-based (relative to account average)
         let isViral = false;
         let viralityReason = "";
+        const isCarousel = reel.type === "Sidecar";
+        
+        // Choose thresholds based on content type
+        const viewsThreshold = isCarousel ? minimumViewsCarousel : minimumViews;
+        const engagementThreshold = isCarousel ? minimumEngagementCarousel : minimumEngagement;
 
-        if (reel.viewCount > 0 && reel.viewCount >= minimumViews) {
+        if (reel.viewCount > 0 && reel.viewCount >= viewsThreshold) {
           // Algorithm 1: Views-based
           isViral = true;
-          viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViews.toLocaleString()}`;
-        } else if (engagement >= minimumEngagement) {
+          viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${viewsThreshold.toLocaleString()} [${isCarousel ? 'Carousel' : 'Reel'}]`;
+        } else if (engagement >= engagementThreshold) {
           // Algorithm 2: Engagement-based
           isViral = true;
-          viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagement.toLocaleString()}`;
-        } else if (growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
-          // Algorithm 3: Growth-based (3x above average + minimum 10K views)
+          viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${engagementThreshold.toLocaleString()} [${isCarousel ? 'Carousel' : 'Reel'}]`;
+        } else if (!isCarousel && growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
+          // Algorithm 3: Growth-based (ONLY for Reels, not Carousels - they must meet absolute thresholds)
           isViral = true;
-          viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()})`;
+          viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()}) [Reel]`;
         }
 
         if (isViral) {
@@ -219,6 +235,7 @@ export async function executeInstagramAnalysis(mastra: any) {
               context: {
                 username: accountData.username,
                 reelUrl: reel.url,
+                contentType: reel.type,
                 caption: reel.caption,
                 viewCount: reel.viewCount,
                 likeCount: reel.likeCount,

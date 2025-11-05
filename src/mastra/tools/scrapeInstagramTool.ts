@@ -15,6 +15,7 @@ export const scrapeInstagramTool = createTool({
     reels: z.array(
       z.object({
         id: z.string(),
+        type: z.string(), // "Reel", "Video", or "Sidecar" (carousel)
         caption: z.string().optional(),
         viewCount: z.number(),
         likeCount: z.number(),
@@ -183,6 +184,7 @@ export const scrapeInstagramTool = createTool({
     const reels = filteredReels
       .map((item: any) => ({
         id: item.id,
+        type: item.type, // "Reel", "Video", or "Sidecar" (carousel)
         caption: item.caption || "",
         viewCount: item.videoViewCount || item.playCount || 0,
         likeCount: item.likesCount || 0,
