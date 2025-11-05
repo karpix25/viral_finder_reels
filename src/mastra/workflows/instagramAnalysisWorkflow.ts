@@ -130,43 +130,27 @@ export async function executeInstagramAnalysis(mastra: any) {
 
       // Determine adaptive criteria based on account size
       const followersCount = accountData.followersCount;
-      let minimumViews: number;
-      let minimumEngagement: number; // likes + comments
-      let minimumViewsCarousel: number; // Higher thresholds for carousels
       let minimumEngagementCarousel: number;
       let accountSizeCategory: string;
 
+      // NEW CRITERIA: Carousels only (by engagement)
       if (followersCount < 100000) {
-        // Small accounts - OPTIMIZED: 2x more sensitive for reels
-        minimumViews = 25000; // Reels/Videos
-        minimumEngagement = 2500;
-        minimumViewsCarousel = 75000; // Not used (carousels don't have views)
-        minimumEngagementCarousel = 15000; // Carousels: 6x stricter than reels
+        minimumEngagementCarousel = 30000; // Small accounts
         accountSizeCategory = "Малый";
       } else if (followersCount < 1000000) {
-        // Medium accounts - OPTIMIZED: 2x more sensitive for reels
-        minimumViews = 100000; // Reels/Videos
-        minimumEngagement = 10000;
-        minimumViewsCarousel = 300000; // Not used (carousels don't have views)
-        minimumEngagementCarousel = 60000; // Carousels: 6x stricter than reels
+        minimumEngagementCarousel = 120000; // Medium accounts
         accountSizeCategory = "Средний";
       } else {
-        // Large accounts - OPTIMIZED: 2x more sensitive for reels
-        minimumViews = 250000; // Reels/Videos
-        minimumEngagement = 25000;
-        minimumViewsCarousel = 750000; // Not used (carousels don't have views)
-        minimumEngagementCarousel = 150000; // Carousels: 6x stricter than reels
+        minimumEngagementCarousel = 300000; // Large accounts
         accountSizeCategory = "Большой";
       }
 
-      logger?.info("📏 [Step2] Adaptive criteria set", {
+      logger?.info("📏 [Step2] Virality criteria set", {
         username: accountData.username,
         followersCount,
         accountSizeCategory,
-        minimumViews,
-        minimumEngagement,
-        minimumViewsCarousel,
-        minimumEngagementCarousel,
+        reelsCriteria: "Views >= 3x followers",
+        carouselsCriteria: `Engagement >= ${minimumEngagementCarousel.toLocaleString()}`,
       });
 
       // Check each reel
@@ -183,54 +167,39 @@ export async function executeInstagramAnalysis(mastra: any) {
         }
 
         // Calculate metrics
-        const growthMultiplier =
-          averageViews > 0 ? reel.viewCount / averageViews : 0;
         const engagement = reel.likeCount + reel.commentCount;
-
-        // MULTI-ALGORITHM VIRALITY CHECK
-        // IMPORTANT: Carousels don't have viewCount - only engagement (likes + comments)
-        // Reels/Videos: Check by views OR engagement OR growth
-        // Carousels: Check ONLY by engagement (stricter thresholds)
-        let isViral = false;
-        let viralityReason = "";
         const isCarousel = reel.type === "Sidecar";
 
+        // NEW VIRALITY CRITERIA
+        let isViral = false;
+        let viralityReason = "";
+
         if (isCarousel) {
-          // CAROUSELS: Only engagement-based (no viewCount available)
+          // CAROUSELS: Only engagement-based (no viewCount available in API)
           if (engagement >= minimumEngagementCarousel) {
             isViral = true;
             viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagementCarousel.toLocaleString()} [Carousel]`;
           }
         } else {
-          // REELS/VIDEOS: Three algorithms
-          if (reel.viewCount > 0 && reel.viewCount >= minimumViews) {
-            // Algorithm 1: Views-based
+          // REELS/VIDEOS: Views must be 3x followers count
+          const requiredViews = followersCount * 3;
+          if (reel.viewCount > 0 && reel.viewCount >= requiredViews) {
             isViral = true;
-            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViews.toLocaleString()} [Reel]`;
-          } else if (engagement >= minimumEngagement) {
-            // Algorithm 2: Engagement-based
-            isViral = true;
-            viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagement.toLocaleString()} [Reel]`;
-          } else if (growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
-            // Algorithm 3: Growth-based (3x above average + minimum 10K views)
-            isViral = true;
-            viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()}) [Reel]`;
+            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${requiredViews.toLocaleString()} (3x ${followersCount.toLocaleString()} followers) [Reel]`;
           }
         }
 
         if (isViral) {
-          logger?.info("🔥 [Step2] VIRAL REEL FOUND!", {
+          logger?.info("🔥 [Step2] VIRAL CONTENT FOUND!", {
             username: accountData.username,
-            reelUrl: reel.url,
+            contentUrl: reel.url,
+            contentType: reel.type,
             ageInDays,
             viralityReason,
-            growthMultiplier: growthMultiplier.toFixed(1),
             viewCount: reel.viewCount,
             engagement,
-            averageViews,
+            followersCount,
             accountSizeCategory,
-            minimumViewsThreshold: minimumViews,
-            minimumEngagementThreshold: minimumEngagement,
           });
 
           // Send immediately to Telegram
@@ -245,8 +214,8 @@ export async function executeInstagramAnalysis(mastra: any) {
                 likeCount: reel.likeCount,
                 commentCount: reel.commentCount,
                 ageInDays,
-                growthMultiplier,
-                averageViews,
+                growthMultiplier: 0, // Not used in new criteria
+                averageViews: 0, // Not used in new criteria
                 followersCount: accountData.followersCount,
               },
               mastra,
