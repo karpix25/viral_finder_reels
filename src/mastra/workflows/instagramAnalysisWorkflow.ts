@@ -137,25 +137,25 @@ export async function executeInstagramAnalysis(mastra: any) {
       let accountSizeCategory: string;
 
       if (followersCount < 100000) {
-        // Small accounts - OPTIMIZED: 2x more sensitive
+        // Small accounts - OPTIMIZED: 2x more sensitive for reels
         minimumViews = 25000; // Reels/Videos
         minimumEngagement = 2500;
-        minimumViewsCarousel = 75000; // Carousels need 3x more (stricter)
-        minimumEngagementCarousel = 7500;
+        minimumViewsCarousel = 75000; // Not used (carousels don't have views)
+        minimumEngagementCarousel = 15000; // Carousels: 6x stricter than reels
         accountSizeCategory = "Малый";
       } else if (followersCount < 1000000) {
-        // Medium accounts - OPTIMIZED: 2x more sensitive
+        // Medium accounts - OPTIMIZED: 2x more sensitive for reels
         minimumViews = 100000; // Reels/Videos
         minimumEngagement = 10000;
-        minimumViewsCarousel = 300000; // Carousels need 3x more (stricter)
-        minimumEngagementCarousel = 30000;
+        minimumViewsCarousel = 300000; // Not used (carousels don't have views)
+        minimumEngagementCarousel = 60000; // Carousels: 6x stricter than reels
         accountSizeCategory = "Средний";
       } else {
-        // Large accounts - OPTIMIZED: 2x more sensitive
+        // Large accounts - OPTIMIZED: 2x more sensitive for reels
         minimumViews = 250000; // Reels/Videos
         minimumEngagement = 25000;
-        minimumViewsCarousel = 750000; // Carousels need 3x more (stricter)
-        minimumEngagementCarousel = 75000;
+        minimumViewsCarousel = 750000; // Not used (carousels don't have views)
+        minimumEngagementCarousel = 150000; // Carousels: 6x stricter than reels
         accountSizeCategory = "Большой";
       }
 
