@@ -135,19 +135,19 @@ export async function executeInstagramAnalysis(mastra: any) {
       let accountSizeCategory: string;
 
       if (followersCount < 100000) {
-        // Small accounts
-        minimumViews = 50000;
-        minimumEngagement = 5000; // 5K engagement
+        // Small accounts - OPTIMIZED: 2x more sensitive
+        minimumViews = 25000; // Reduced from 50K
+        minimumEngagement = 2500; // Reduced from 5K
         accountSizeCategory = "Малый";
       } else if (followersCount < 1000000) {
-        // Medium accounts
-        minimumViews = 200000;
-        minimumEngagement = 20000; // 20K engagement
+        // Medium accounts - OPTIMIZED: 2x more sensitive
+        minimumViews = 100000; // Reduced from 200K
+        minimumEngagement = 10000; // Reduced from 20K
         accountSizeCategory = "Средний";
       } else {
-        // Large accounts
-        minimumViews = 500000;
-        minimumEngagement = 50000; // 50K engagement
+        // Large accounts - OPTIMIZED: 2x more sensitive
+        minimumViews = 250000; // Reduced from 500K
+        minimumEngagement = 25000; // Reduced from 50K
         accountSizeCategory = "Большой";
       }
 
@@ -177,20 +177,25 @@ export async function executeInstagramAnalysis(mastra: any) {
           averageViews > 0 ? reel.viewCount / averageViews : 0;
         const engagement = reel.likeCount + reel.commentCount;
 
-        // DUAL-ALGORITHM VIRALITY CHECK
-        // Primary: Use views if available (viewCount > 0)
-        // Fallback: Use engagement (likes + comments)
+        // TRIPLE-ALGORITHM VIRALITY CHECK
+        // 1. Views-based (absolute threshold)
+        // 2. Engagement-based (absolute threshold)
+        // 3. Growth-based (relative to account average)
         let isViral = false;
         let viralityReason = "";
 
         if (reel.viewCount > 0 && reel.viewCount >= minimumViews) {
-          // Primary algorithm: Views-based
+          // Algorithm 1: Views-based
           isViral = true;
           viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViews.toLocaleString()}`;
         } else if (engagement >= minimumEngagement) {
-          // Fallback algorithm: Engagement-based
+          // Algorithm 2: Engagement-based
           isViral = true;
           viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagement.toLocaleString()}`;
+        } else if (growthMultiplier >= 3.0 && reel.viewCount >= 10000) {
+          // Algorithm 3: Growth-based (3x above average + minimum 10K views)
+          isViral = true;
+          viralityReason = `Growth: ${growthMultiplier.toFixed(1)}x above average (${reel.viewCount.toLocaleString()} vs avg ${averageViews.toLocaleString()})`;
         }
 
         if (isViral) {
