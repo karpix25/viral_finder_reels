@@ -134,79 +134,79 @@ export async function executeInstagramAnalysis(mastra: any) {
       let minimumEngagementCarousel: number; // For Carousels
       let accountSizeCategory: string;
 
-      // ULTRA STRICT GRADATION - SAME THRESHOLDS FOR BOTH REELS (views) AND CAROUSELS (engagement)
-      // До 100K: градация по 10K с очень высокими порогами
+      // STRICT GRADATION WITH -30% REDUCTION - SAME THRESHOLDS FOR BOTH REELS (views) AND CAROUSELS (engagement)
+      // До 100K: градация по 10K
       // 100K-1M: единый порог
       // 1M-3M: градация по 500K
       // 3M+: единая группа
       
       if (followersCount < 10000) {
-        minimumViewsReel = 300000; // 0-10K
-        minimumEngagementCarousel = 300000;
+        minimumViewsReel = 210000; // 0-10K (-30%)
+        minimumEngagementCarousel = 210000;
         accountSizeCategory = "Микро (0-10K)";
       } else if (followersCount < 20000) {
-        minimumViewsReel = 350000; // 10K-20K
-        minimumEngagementCarousel = 350000;
+        minimumViewsReel = 245000; // 10K-20K (-30%)
+        minimumEngagementCarousel = 245000;
         accountSizeCategory = "Микро (10K-20K)";
       } else if (followersCount < 30000) {
-        minimumViewsReel = 400000; // 20K-30K
-        minimumEngagementCarousel = 400000;
+        minimumViewsReel = 280000; // 20K-30K (-30%)
+        minimumEngagementCarousel = 280000;
         accountSizeCategory = "Микро (20K-30K)";
       } else if (followersCount < 40000) {
-        minimumViewsReel = 450000; // 30K-40K
-        minimumEngagementCarousel = 450000;
+        minimumViewsReel = 315000; // 30K-40K (-30%)
+        minimumEngagementCarousel = 315000;
         accountSizeCategory = "Микро (30K-40K)";
       } else if (followersCount < 50000) {
-        minimumViewsReel = 500000; // 40K-50K
-        minimumEngagementCarousel = 500000;
+        minimumViewsReel = 350000; // 40K-50K (-30%)
+        minimumEngagementCarousel = 350000;
         accountSizeCategory = "Микро (40K-50K)";
       } else if (followersCount < 60000) {
-        minimumViewsReel = 600000; // 50K-60K
-        minimumEngagementCarousel = 600000;
+        minimumViewsReel = 420000; // 50K-60K (-30%)
+        minimumEngagementCarousel = 420000;
         accountSizeCategory = "Микро (50K-60K)";
       } else if (followersCount < 70000) {
-        minimumViewsReel = 700000; // 60K-70K
-        minimumEngagementCarousel = 700000;
+        minimumViewsReel = 490000; // 60K-70K (-30%)
+        minimumEngagementCarousel = 490000;
         accountSizeCategory = "Малый (60K-70K)";
       } else if (followersCount < 80000) {
-        minimumViewsReel = 800000; // 70K-80K
-        minimumEngagementCarousel = 800000;
+        minimumViewsReel = 560000; // 70K-80K (-30%)
+        minimumEngagementCarousel = 560000;
         accountSizeCategory = "Малый (70K-80K)";
       } else if (followersCount < 90000) {
-        minimumViewsReel = 900000; // 80K-90K
-        minimumEngagementCarousel = 900000;
+        minimumViewsReel = 630000; // 80K-90K (-30%)
+        minimumEngagementCarousel = 630000;
         accountSizeCategory = "Малый (80K-90K)";
       } else if (followersCount < 100000) {
-        minimumViewsReel = 1000000; // 90K-100K
-        minimumEngagementCarousel = 1000000;
+        minimumViewsReel = 700000; // 90K-100K (-30%)
+        minimumEngagementCarousel = 700000;
         accountSizeCategory = "Малый (90K-100K)";
       } else if (followersCount < 1000000) {
-        minimumViewsReel = 1500000; // 100K-1M (единый порог)
-        minimumEngagementCarousel = 1500000;
+        minimumViewsReel = 1050000; // 100K-1M (-30%)
+        minimumEngagementCarousel = 1050000;
         accountSizeCategory = "Средний (100K-1M)";
       } else if (followersCount < 1500000) {
-        minimumViewsReel = 2500000; // 1M-1.5M
-        minimumEngagementCarousel = 2500000;
+        minimumViewsReel = 1750000; // 1M-1.5M (-30%)
+        minimumEngagementCarousel = 1750000;
         accountSizeCategory = "Большой (1M-1.5M)";
       } else if (followersCount < 2000000) {
-        minimumViewsReel = 3000000; // 1.5M-2M
-        minimumEngagementCarousel = 3000000;
+        minimumViewsReel = 2100000; // 1.5M-2M (-30%)
+        minimumEngagementCarousel = 2100000;
         accountSizeCategory = "Большой (1.5M-2M)";
       } else if (followersCount < 2500000) {
-        minimumViewsReel = 4000000; // 2M-2.5M
-        minimumEngagementCarousel = 4000000;
+        minimumViewsReel = 2800000; // 2M-2.5M (-30%)
+        minimumEngagementCarousel = 2800000;
         accountSizeCategory = "Большой (2M-2.5M)";
       } else if (followersCount < 3000000) {
-        minimumViewsReel = 5000000; // 2.5M-3M
-        minimumEngagementCarousel = 5000000;
+        minimumViewsReel = 3500000; // 2.5M-3M (-30%)
+        minimumEngagementCarousel = 3500000;
         accountSizeCategory = "Большой (2.5M-3M)";
       } else {
-        minimumViewsReel = 6000000; // 3M+
-        minimumEngagementCarousel = 6000000;
+        minimumViewsReel = 4200000; // 3M+ (-30%)
+        minimumEngagementCarousel = 4200000;
         accountSizeCategory = "Мега (3M+)";
       }
 
-      logger?.info("📏 [Step2] Virality criteria set (ultra strict)", {
+      logger?.info("📏 [Step2] Virality criteria set (strict -30%)", {
         username: accountData.username,
         followersCount,
         accountSizeCategory,
