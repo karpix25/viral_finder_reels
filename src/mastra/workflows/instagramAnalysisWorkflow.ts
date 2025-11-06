@@ -130,70 +130,87 @@ export async function executeInstagramAnalysis(mastra: any) {
 
       // Determine adaptive criteria based on account size with DETAILED GRADATION
       const followersCount = accountData.followersCount;
-      let minimumEngagementCarousel: number;
+      let minimumViewsReel: number; // For Reels/Videos
+      let minimumEngagementCarousel: number; // For Carousels
       let accountSizeCategory: string;
 
-      // ULTRA STRICT GRADATION FOR CAROUSELS
+      // ULTRA STRICT GRADATION - SAME THRESHOLDS FOR BOTH REELS (views) AND CAROUSELS (engagement)
       // До 100K: градация по 10K с очень высокими порогами
       // 100K-1M: единый порог
       // 1M-3M: градация по 500K
       // 3M+: единая группа
       
       if (followersCount < 10000) {
-        minimumEngagementCarousel = 300000; // 0-10K
+        minimumViewsReel = 300000; // 0-10K
+        minimumEngagementCarousel = 300000;
         accountSizeCategory = "Микро (0-10K)";
       } else if (followersCount < 20000) {
-        minimumEngagementCarousel = 350000; // 10K-20K
+        minimumViewsReel = 350000; // 10K-20K
+        minimumEngagementCarousel = 350000;
         accountSizeCategory = "Микро (10K-20K)";
       } else if (followersCount < 30000) {
-        minimumEngagementCarousel = 400000; // 20K-30K
+        minimumViewsReel = 400000; // 20K-30K
+        minimumEngagementCarousel = 400000;
         accountSizeCategory = "Микро (20K-30K)";
       } else if (followersCount < 40000) {
-        minimumEngagementCarousel = 450000; // 30K-40K
+        minimumViewsReel = 450000; // 30K-40K
+        minimumEngagementCarousel = 450000;
         accountSizeCategory = "Микро (30K-40K)";
       } else if (followersCount < 50000) {
-        minimumEngagementCarousel = 500000; // 40K-50K
+        minimumViewsReel = 500000; // 40K-50K
+        minimumEngagementCarousel = 500000;
         accountSizeCategory = "Микро (40K-50K)";
       } else if (followersCount < 60000) {
-        minimumEngagementCarousel = 600000; // 50K-60K
+        minimumViewsReel = 600000; // 50K-60K
+        minimumEngagementCarousel = 600000;
         accountSizeCategory = "Микро (50K-60K)";
       } else if (followersCount < 70000) {
-        minimumEngagementCarousel = 700000; // 60K-70K
+        minimumViewsReel = 700000; // 60K-70K
+        minimumEngagementCarousel = 700000;
         accountSizeCategory = "Малый (60K-70K)";
       } else if (followersCount < 80000) {
-        minimumEngagementCarousel = 800000; // 70K-80K
+        minimumViewsReel = 800000; // 70K-80K
+        minimumEngagementCarousel = 800000;
         accountSizeCategory = "Малый (70K-80K)";
       } else if (followersCount < 90000) {
-        minimumEngagementCarousel = 900000; // 80K-90K
+        minimumViewsReel = 900000; // 80K-90K
+        minimumEngagementCarousel = 900000;
         accountSizeCategory = "Малый (80K-90K)";
       } else if (followersCount < 100000) {
-        minimumEngagementCarousel = 1000000; // 90K-100K
+        minimumViewsReel = 1000000; // 90K-100K
+        minimumEngagementCarousel = 1000000;
         accountSizeCategory = "Малый (90K-100K)";
       } else if (followersCount < 1000000) {
-        minimumEngagementCarousel = 1500000; // 100K-1M (единый порог)
+        minimumViewsReel = 1500000; // 100K-1M (единый порог)
+        minimumEngagementCarousel = 1500000;
         accountSizeCategory = "Средний (100K-1M)";
       } else if (followersCount < 1500000) {
-        minimumEngagementCarousel = 2500000; // 1M-1.5M
+        minimumViewsReel = 2500000; // 1M-1.5M
+        minimumEngagementCarousel = 2500000;
         accountSizeCategory = "Большой (1M-1.5M)";
       } else if (followersCount < 2000000) {
-        minimumEngagementCarousel = 3000000; // 1.5M-2M
+        minimumViewsReel = 3000000; // 1.5M-2M
+        minimumEngagementCarousel = 3000000;
         accountSizeCategory = "Большой (1.5M-2M)";
       } else if (followersCount < 2500000) {
-        minimumEngagementCarousel = 4000000; // 2M-2.5M
+        minimumViewsReel = 4000000; // 2M-2.5M
+        minimumEngagementCarousel = 4000000;
         accountSizeCategory = "Большой (2M-2.5M)";
       } else if (followersCount < 3000000) {
-        minimumEngagementCarousel = 5000000; // 2.5M-3M
+        minimumViewsReel = 5000000; // 2.5M-3M
+        minimumEngagementCarousel = 5000000;
         accountSizeCategory = "Большой (2.5M-3M)";
       } else {
-        minimumEngagementCarousel = 6000000; // 3M+
+        minimumViewsReel = 6000000; // 3M+
+        minimumEngagementCarousel = 6000000;
         accountSizeCategory = "Мега (3M+)";
       }
 
-      logger?.info("📏 [Step2] Virality criteria set (detailed gradation)", {
+      logger?.info("📏 [Step2] Virality criteria set (ultra strict)", {
         username: accountData.username,
         followersCount,
         accountSizeCategory,
-        reelsCriteria: "Views >= 3x followers",
+        reelsCriteria: `Views >= ${minimumViewsReel.toLocaleString()}`,
         carouselsCriteria: `Engagement >= ${minimumEngagementCarousel.toLocaleString()}`,
       });
 
@@ -225,11 +242,10 @@ export async function executeInstagramAnalysis(mastra: any) {
             viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagementCarousel.toLocaleString()} [Carousel]`;
           }
         } else {
-          // REELS/VIDEOS: Views must be 3x followers count
-          const requiredViews = followersCount * 3;
-          if (reel.viewCount > 0 && reel.viewCount >= requiredViews) {
+          // REELS/VIDEOS: Absolute views threshold
+          if (reel.viewCount > 0 && reel.viewCount >= minimumViewsReel) {
             isViral = true;
-            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${requiredViews.toLocaleString()} (3x ${followersCount.toLocaleString()} followers) [Reel]`;
+            viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViewsReel.toLocaleString()} [Reel]`;
           }
         }
 
