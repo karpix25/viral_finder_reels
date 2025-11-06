@@ -36,48 +36,31 @@
 
 **ВАЖНО**: У каруселей НЕТ просмотров в Instagram API
 
-**Единственный критерий: Engagement (лайки + комментарии) с ДЕТАЛЬНОЙ ГРАДАЦИЕЙ**
+**Единственный критерий: Engagement (лайки + комментарии) - УЛЬТРА СТРОГИЕ ПОРОГИ**
 
 **Микро аккаунты (0-100K) - градация по 10K:**
-- 0-10K: ≥ 3,000 engagement
-- 10K-20K: ≥ 6,000 engagement
-- 20K-30K: ≥ 9,000 engagement
-- 30K-40K: ≥ 12,000 engagement
-- 40K-50K: ≥ 15,000 engagement
-- 50K-60K: ≥ 18,000 engagement
-- 60K-70K: ≥ 21,000 engagement
-- 70K-80K: ≥ 24,000 engagement
-- 80K-90K: ≥ 27,000 engagement
-- 90K-100K: ≥ 30,000 engagement
+- 0-10K: ≥ 300,000 engagement
+- 10K-20K: ≥ 350,000 engagement
+- 20K-30K: ≥ 400,000 engagement
+- 30K-40K: ≥ 450,000 engagement
+- 40K-50K: ≥ 500,000 engagement
+- 50K-60K: ≥ 600,000 engagement
+- 60K-70K: ≥ 700,000 engagement
+- 70K-80K: ≥ 800,000 engagement
+- 80K-90K: ≥ 900,000 engagement
+- 90K-100K: ≥ 1,000,000 engagement
 
-**Средние аккаунты (100K-1M) - градация по 50K:**
-- 100K-150K: ≥ 45,000 engagement
-- 150K-200K: ≥ 60,000 engagement
-- 200K-250K: ≥ 75,000 engagement
-- 250K-300K: ≥ 90,000 engagement
-- 300K-350K: ≥ 105,000 engagement
-- 350K-400K: ≥ 120,000 engagement
-- 400K-450K: ≥ 135,000 engagement
-- 450K-500K: ≥ 150,000 engagement
-- 500K-550K: ≥ 165,000 engagement
-- 550K-600K: ≥ 180,000 engagement
-- 600K-650K: ≥ 195,000 engagement
-- 650K-700K: ≥ 210,000 engagement
-- 700K-750K: ≥ 225,000 engagement
-- 750K-800K: ≥ 240,000 engagement
-- 800K-850K: ≥ 255,000 engagement
-- 850K-900K: ≥ 270,000 engagement
-- 900K-950K: ≥ 285,000 engagement
-- 950K-1M: ≥ 300,000 engagement
+**Средние аккаунты (100K-1M):**
+- 100K-1M: ≥ 1,500,000 engagement (единый порог)
 
 **Большие аккаунты (1M-3M) - градация по 500K:**
-- 1M-1.5M: ≥ 450,000 engagement
-- 1.5M-2M: ≥ 600,000 engagement
-- 2M-2.5M: ≥ 750,000 engagement
-- 2.5M-3M: ≥ 900,000 engagement
+- 1M-1.5M: ≥ 2,500,000 engagement
+- 1.5M-2M: ≥ 3,000,000 engagement
+- 2M-2.5M: ≥ 4,000,000 engagement
+- 2.5M-3M: ≥ 5,000,000 engagement
 
 **Мега аккаунты (3M+):**
-- 3M+: ≥ 1,000,000 engagement
+- 3M+: ≥ 6,000,000 engagement
 
 ## Технические детали
 
@@ -99,6 +82,14 @@
 - **Цель**: Предотвращение дубликатов
 
 ## История изменений
+
+### 2025-11-05 (v5): УЛЬТРА СТРОГИЕ КРИТЕРИИ
+- **Карусели**: Экстремально высокие пороги для отбора только топовых
+  - До 100K: 300K-1M engagement (градация по 10K)
+  - 100K-1M: 1.5M engagement (единый порог)
+  - 1M-3M: 2.5M-5M engagement (градация по 500K)
+  - 3M+: 6M engagement
+  - **Цель**: Находить только абсолютно вирусные карусели
 
 ### 2025-11-05 (v4): ДЕТАЛЬНАЯ ГРАДАЦИЯ
 - **Карусели**: Детальная градация по размеру аккаунта
