@@ -128,24 +128,119 @@ export async function executeInstagramAnalysis(mastra: any) {
         averageViews,
       });
 
-      // Determine adaptive criteria based on account size
+      // Determine adaptive criteria based on account size with DETAILED GRADATION
       const followersCount = accountData.followersCount;
       let minimumEngagementCarousel: number;
       let accountSizeCategory: string;
 
-      // NEW CRITERIA: Carousels only (by engagement)
-      if (followersCount < 100000) {
-        minimumEngagementCarousel = 30000; // Small accounts
-        accountSizeCategory = "Малый";
+      // DETAILED GRADATION FOR CAROUSELS
+      // До 100K: градация по 10K
+      // 100K-999,999: градация по 50K
+      // 1M-2,999,999: градация по 500K
+      // 3M+: единая группа
+      
+      if (followersCount < 10000) {
+        minimumEngagementCarousel = 3000; // 0-10K
+        accountSizeCategory = "Микро (0-10K)";
+      } else if (followersCount < 20000) {
+        minimumEngagementCarousel = 6000; // 10K-20K
+        accountSizeCategory = "Микро (10K-20K)";
+      } else if (followersCount < 30000) {
+        minimumEngagementCarousel = 9000; // 20K-30K
+        accountSizeCategory = "Микро (20K-30K)";
+      } else if (followersCount < 40000) {
+        minimumEngagementCarousel = 12000; // 30K-40K
+        accountSizeCategory = "Микро (30K-40K)";
+      } else if (followersCount < 50000) {
+        minimumEngagementCarousel = 15000; // 40K-50K
+        accountSizeCategory = "Микро (40K-50K)";
+      } else if (followersCount < 60000) {
+        minimumEngagementCarousel = 18000; // 50K-60K
+        accountSizeCategory = "Микро (50K-60K)";
+      } else if (followersCount < 70000) {
+        minimumEngagementCarousel = 21000; // 60K-70K
+        accountSizeCategory = "Малый (60K-70K)";
+      } else if (followersCount < 80000) {
+        minimumEngagementCarousel = 24000; // 70K-80K
+        accountSizeCategory = "Малый (70K-80K)";
+      } else if (followersCount < 90000) {
+        minimumEngagementCarousel = 27000; // 80K-90K
+        accountSizeCategory = "Малый (80K-90K)";
+      } else if (followersCount < 100000) {
+        minimumEngagementCarousel = 30000; // 90K-100K
+        accountSizeCategory = "Малый (90K-100K)";
+      } else if (followersCount < 150000) {
+        minimumEngagementCarousel = 45000; // 100K-150K
+        accountSizeCategory = "Средний (100K-150K)";
+      } else if (followersCount < 200000) {
+        minimumEngagementCarousel = 60000; // 150K-200K
+        accountSizeCategory = "Средний (150K-200K)";
+      } else if (followersCount < 250000) {
+        minimumEngagementCarousel = 75000; // 200K-250K
+        accountSizeCategory = "Средний (200K-250K)";
+      } else if (followersCount < 300000) {
+        minimumEngagementCarousel = 90000; // 250K-300K
+        accountSizeCategory = "Средний (250K-300K)";
+      } else if (followersCount < 350000) {
+        minimumEngagementCarousel = 105000; // 300K-350K
+        accountSizeCategory = "Средний (300K-350K)";
+      } else if (followersCount < 400000) {
+        minimumEngagementCarousel = 120000; // 350K-400K
+        accountSizeCategory = "Средний (350K-400K)";
+      } else if (followersCount < 450000) {
+        minimumEngagementCarousel = 135000; // 400K-450K
+        accountSizeCategory = "Средний (400K-450K)";
+      } else if (followersCount < 500000) {
+        minimumEngagementCarousel = 150000; // 450K-500K
+        accountSizeCategory = "Средний (450K-500K)";
+      } else if (followersCount < 550000) {
+        minimumEngagementCarousel = 165000; // 500K-550K
+        accountSizeCategory = "Средний (500K-550K)";
+      } else if (followersCount < 600000) {
+        minimumEngagementCarousel = 180000; // 550K-600K
+        accountSizeCategory = "Средний (550K-600K)";
+      } else if (followersCount < 650000) {
+        minimumEngagementCarousel = 195000; // 600K-650K
+        accountSizeCategory = "Средний (600K-650K)";
+      } else if (followersCount < 700000) {
+        minimumEngagementCarousel = 210000; // 650K-700K
+        accountSizeCategory = "Средний (650K-700K)";
+      } else if (followersCount < 750000) {
+        minimumEngagementCarousel = 225000; // 700K-750K
+        accountSizeCategory = "Средний (700K-750K)";
+      } else if (followersCount < 800000) {
+        minimumEngagementCarousel = 240000; // 750K-800K
+        accountSizeCategory = "Средний (750K-800K)";
+      } else if (followersCount < 850000) {
+        minimumEngagementCarousel = 255000; // 800K-850K
+        accountSizeCategory = "Средний (800K-850K)";
+      } else if (followersCount < 900000) {
+        minimumEngagementCarousel = 270000; // 850K-900K
+        accountSizeCategory = "Средний (850K-900K)";
+      } else if (followersCount < 950000) {
+        minimumEngagementCarousel = 285000; // 900K-950K
+        accountSizeCategory = "Средний (900K-950K)";
       } else if (followersCount < 1000000) {
-        minimumEngagementCarousel = 120000; // Medium accounts
-        accountSizeCategory = "Средний";
+        minimumEngagementCarousel = 300000; // 950K-1M
+        accountSizeCategory = "Средний (950K-1M)";
+      } else if (followersCount < 1500000) {
+        minimumEngagementCarousel = 450000; // 1M-1.5M
+        accountSizeCategory = "Большой (1M-1.5M)";
+      } else if (followersCount < 2000000) {
+        minimumEngagementCarousel = 600000; // 1.5M-2M
+        accountSizeCategory = "Большой (1.5M-2M)";
+      } else if (followersCount < 2500000) {
+        minimumEngagementCarousel = 750000; // 2M-2.5M
+        accountSizeCategory = "Большой (2M-2.5M)";
+      } else if (followersCount < 3000000) {
+        minimumEngagementCarousel = 900000; // 2.5M-3M
+        accountSizeCategory = "Большой (2.5M-3M)";
       } else {
-        minimumEngagementCarousel = 300000; // Large accounts
-        accountSizeCategory = "Большой";
+        minimumEngagementCarousel = 1000000; // 3M+
+        accountSizeCategory = "Мега (3M+)";
       }
 
-      logger?.info("📏 [Step2] Virality criteria set", {
+      logger?.info("📏 [Step2] Virality criteria set (detailed gradation)", {
         username: accountData.username,
         followersCount,
         accountSizeCategory,
