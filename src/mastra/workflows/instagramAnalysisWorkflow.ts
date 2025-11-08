@@ -130,7 +130,6 @@ export async function executeInstagramAnalysis(mastra: any) {
 
       // Determine adaptive criteria based on account size
       const followersCount = accountData.followersCount;
-      let minimumEngagementCarousel: number; // For Carousels
       let accountSizeCategory: string;
       let viewsMultiplier: number;
 
@@ -332,11 +331,8 @@ const stepProcessAccountsAndSendFindings = createStep({
   id: "process-accounts-and-send-findings",
   description:
     "Process Instagram accounts, analyze for viral reels and carousels, and send findings immediately",
-  inputSchema: z.object({}),
-  outputSchema: z.object({
-    totalAccountsProcessed: z.number(),
-    totalViralReelsSent: z.number(),
-  }),
+  inputSchema: z.unknown(),
+  outputSchema: z.unknown(),
   execute: async ({ mastra }) => {
     return await executeInstagramAnalysis(mastra);
   },
@@ -346,11 +342,6 @@ export const instagramAnalysisWorkflow = createWorkflow({
   id: "instagram-viral-analysis",
   description:
     "Analyze Instagram accounts for viral reels and carousels and send instant notifications",
-  inputSchema: z.object({}),
-  outputSchema: z.object({
-    totalAccountsProcessed: z.number(),
-    totalViralReelsSent: z.number(),
-  }),
-})
-  .then(stepProcessAccountsAndSendFindings)
-  .commit();
+  inputSchema: z.unknown(),
+  outputSchema: z.unknown(),
+}).then(stepProcessAccountsAndSendFindings).commit();
