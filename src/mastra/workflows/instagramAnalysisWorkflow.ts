@@ -141,7 +141,8 @@ export async function executeInstagramAnalysis(mastra: any) {
       // TARGET: 1K followers → 100K+ views, 1M followers → 2M+ views
       
       // Calculate progressive multiplier with smooth gradation
-      // TARGET: 1K followers → 100K views, 1M followers → 2M views
+      // TARGET: 1K followers → 100K views, 1M+ followers → 2M views
+      // IMPORTANT: Multiplier decreases as followers increase, ensuring monotonic growth
       if (followersCount < 5000) {
         viewsMultiplier = 100; // 1K-5K: 1K×100=100K
         accountSizeCategory = "Микро (1K-5K)";
@@ -161,22 +162,25 @@ export async function executeInstagramAnalysis(mastra: any) {
         viewsMultiplier = 8; // 100K-200K: 200K×8=1.6M
         accountSizeCategory = "Средний (100K-200K)";
       } else if (followersCount < 500000) {
-        viewsMultiplier = 5; // 200K-500K: 500K×5=2.5M
+        viewsMultiplier = 4; // 200K-500K: 500K×4=2M
         accountSizeCategory = "Средний (200K-500K)";
-      } else if (followersCount < 750000) {
-        viewsMultiplier = 4; // 500K-750K: 750K×4=3M
-        accountSizeCategory = "Большой (500K-750K)";
-      } else if (followersCount < 1000000) {
-        viewsMultiplier = 3; // 750K-1M: 900K×3=2.7M
-        accountSizeCategory = "Большой (750K-1M)";
       } else {
-        viewsMultiplier = 2; // 1M+: 1M×2=2M ✓
-        accountSizeCategory = "Мега (1M+)";
+        viewsMultiplier = 2; // 500K+: Максимальный множитель X2 для всех больших аккаунтов
+        accountSizeCategory = followersCount >= 1000000 ? "Мега (1M+)" : "Большой (500K-1M)";
       }
       
-      // Calculate minimum views with floor of 100K
+      // Calculate minimum views
+      // For accounts ≥ 500K: use X2 multiplier but with 2M floor to ensure monotonic growth
       const calculatedMinimum = followersCount * viewsMultiplier;
-      const minimumViewsReel = Math.max(100000, calculatedMinimum);
+      let minimumViewsReel: number;
+      
+      if (followersCount >= 500000) {
+        // For big accounts (≥500K): X2 multiplier with 2M minimum
+        minimumViewsReel = Math.max(2000000, calculatedMinimum);
+      } else {
+        // For smaller accounts: 100K minimum
+        minimumViewsReel = Math.max(100000, calculatedMinimum);
+      }
       
       // Carousel engagement thresholds (same progressive logic as reels)
       const minimumEngagementCarousel = minimumViewsReel;
