@@ -182,17 +182,34 @@ export async function executeInstagramAnalysis(mastra: any) {
         minimumViewsReel = Math.max(100000, calculatedMinimum);
       }
       
-      // Carousel engagement thresholds (same progressive logic as reels)
-      const minimumEngagementCarousel = minimumViewsReel;
+      // Carousel engagement thresholds (MUCH LOWER than reels)
+      // Example: 500K followers → 15K engagement is acceptable
+      // Using ~3% of followers as baseline
+      let carouselMultiplier: number;
+      
+      if (followersCount < 10000) {
+        carouselMultiplier = 0.5; // 5K → 2.5K engagement
+      } else if (followersCount < 50000) {
+        carouselMultiplier = 0.2; // 30K → 6K engagement
+      } else if (followersCount < 100000) {
+        carouselMultiplier = 0.1; // 80K → 8K engagement
+      } else if (followersCount < 500000) {
+        carouselMultiplier = 0.05; // 300K → 15K engagement
+      } else {
+        carouselMultiplier = 0.03; // 500K+ → 3% engagement (500K → 15K)
+      }
+      
+      const carouselCalculated = followersCount * carouselMultiplier;
+      const minimumEngagementCarousel = Math.max(5000, carouselCalculated); // Minimum 5K engagement
 
       logger?.info("📏 [Step2] Virality criteria set (v10 progressive)", {
         username: accountData.username,
         followersCount,
         accountSizeCategory,
-        viewsMultiplier: `X${viewsMultiplier}`,
-        calculatedMinimum: calculatedMinimum.toLocaleString(),
-        reelsCriteria: `Views >= ${minimumViewsReel.toLocaleString()} (max of ${calculatedMinimum.toLocaleString()} or 100K floor)`,
-        carouselsCriteria: `Engagement >= ${minimumEngagementCarousel.toLocaleString()}`,
+        reelsMultiplier: `X${viewsMultiplier}`,
+        carouselsMultiplier: `X${carouselMultiplier}`,
+        reelsCriteria: `Views >= ${minimumViewsReel.toLocaleString()}`,
+        carouselsCriteria: `Engagement >= ${minimumEngagementCarousel.toLocaleString()} (лайки+комментарии)`,
       });
 
       // Check each reel
