@@ -135,28 +135,42 @@ export async function executeInstagramAnalysis(mastra: any) {
       let viewsMultiplier: number;
 
       // V10 PROGRESSIVE MULTIPLIER CRITERIA:
-      // REELS: Views >= followers * multiplier (arithmetic progression from X100 to X2)
-      // CAROUSELS: Engagement thresholds (-30% from v8)
+      // REELS: Views >= followers * multiplier (smooth progression from X100 to X2)
+      // CAROUSELS: Same logic as reels
       // MINIMUM: 100K views for any reel
+      // TARGET: 1K followers → 100K+ views, 1M followers → 2M+ views
       
-      // Calculate progressive multiplier based on follower count
-      if (followersCount < 10000) {
-        viewsMultiplier = 100; // Small accounts need 100x
-        accountSizeCategory = "Микро (0-10K)";
+      // Calculate progressive multiplier with smooth gradation
+      // TARGET: 1K followers → 100K views, 1M followers → 2M views
+      if (followersCount < 5000) {
+        viewsMultiplier = 100; // 1K-5K: 1K×100=100K
+        accountSizeCategory = "Микро (1K-5K)";
+      } else if (followersCount < 10000) {
+        viewsMultiplier = 50; // 5K-10K: 10K×50=500K
+        accountSizeCategory = "Микро (5K-10K)";
+      } else if (followersCount < 20000) {
+        viewsMultiplier = 30; // 10K-20K: 20K×30=600K
+        accountSizeCategory = "Микро (10K-20K)";
       } else if (followersCount < 50000) {
-        viewsMultiplier = 50; // 10K-50K: 50x
-        accountSizeCategory = "Микро (10K-50K)";
+        viewsMultiplier = 15; // 20K-50K: 50K×15=750K
+        accountSizeCategory = "Малый (20K-50K)";
       } else if (followersCount < 100000) {
-        viewsMultiplier = 20; // 50K-100K: 20x
+        viewsMultiplier = 10; // 50K-100K: 100K×10=1M
         accountSizeCategory = "Малый (50K-100K)";
+      } else if (followersCount < 200000) {
+        viewsMultiplier = 8; // 100K-200K: 200K×8=1.6M
+        accountSizeCategory = "Средний (100K-200K)";
       } else if (followersCount < 500000) {
-        viewsMultiplier = 10; // 100K-500K: 10x
-        accountSizeCategory = "Средний (100K-500K)";
+        viewsMultiplier = 5; // 200K-500K: 500K×5=2.5M
+        accountSizeCategory = "Средний (200K-500K)";
+      } else if (followersCount < 750000) {
+        viewsMultiplier = 4; // 500K-750K: 750K×4=3M
+        accountSizeCategory = "Большой (500K-750K)";
       } else if (followersCount < 1000000) {
-        viewsMultiplier = 5; // 500K-1M: 5x
-        accountSizeCategory = "Большой (500K-1M)";
+        viewsMultiplier = 3; // 750K-1M: 900K×3=2.7M
+        accountSizeCategory = "Большой (750K-1M)";
       } else {
-        viewsMultiplier = 2; // 1M+: 2x
+        viewsMultiplier = 2; // 1M+: 1M×2=2M ✓
         accountSizeCategory = "Мега (1M+)";
       }
       
@@ -164,20 +178,8 @@ export async function executeInstagramAnalysis(mastra: any) {
       const calculatedMinimum = followersCount * viewsMultiplier;
       const minimumViewsReel = Math.max(100000, calculatedMinimum);
       
-      // Carousel engagement thresholds (same progressive logic)
-      if (followersCount < 10000) {
-        minimumEngagementCarousel = 100000; // Minimum 100K
-      } else if (followersCount < 50000) {
-        minimumEngagementCarousel = Math.max(100000, followersCount * 30);
-      } else if (followersCount < 100000) {
-        minimumEngagementCarousel = followersCount * 15;
-      } else if (followersCount < 500000) {
-        minimumEngagementCarousel = followersCount * 8;
-      } else if (followersCount < 1000000) {
-        minimumEngagementCarousel = followersCount * 4;
-      } else {
-        minimumEngagementCarousel = followersCount * 2;
-      }
+      // Carousel engagement thresholds (same progressive logic as reels)
+      const minimumEngagementCarousel = minimumViewsReel;
 
       logger?.info("📏 [Step2] Virality criteria set (v10 progressive)", {
         username: accountData.username,
