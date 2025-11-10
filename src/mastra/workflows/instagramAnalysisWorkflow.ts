@@ -4,86 +4,31 @@ import { readGoogleSheetsTool } from "../tools/readGoogleSheetsTool";
 import { scrapeInstagramTool } from "../tools/scrapeInstagramTool";
 import { sendSingleViralReelTool } from "../tools/sendSingleViralReelTool";
 import { RuntimeContext } from "@mastra/core/di";
-import { db } from "../storage";
-import { workflowProgress } from "../storage/schema";
-import { eq } from "drizzle-orm";
 
 const runtimeContext = new RuntimeContext();
-const WORKFLOW_NAME = "instagram-viral-analysis";
 
-// Process ALL accounts in a single run
-// System handles 1000+ accounts efficiently with parallel processing
-const MAX_ACCOUNTS_PER_RUN = 100000;
-
-// Core workflow logic - can be called from step OR directly from cron scheduler
+// Process ALL accounts in a single run - from first to last row
+// Each hourly run analyzes the entire Google Sheets list (1000+ accounts)
+// Each account analyzed for up to 100 latest reels/carousels
 export async function executeInstagramAnalysis(mastra: any) {
   const logger = mastra?.getLogger();
   logger?.info(
-    "🚀 [Workflow] Starting Instagram viral analysis with instant notifications",
+    "🚀 [Workflow] Starting Instagram viral analysis - processing ALL accounts from first to last row",
   );
 
-  // Step 1: Get or create workflow progress
-  logger?.info("📊 [Step0] Checking workflow progress");
+  // Step 1: Read ALL accounts from Google Sheets (from first to last row)
+  logger?.info("📖 [Step1] Reading ALL Instagram accounts from Google Sheets");
 
-  let progress = await db
-    .select()
-    .from(workflowProgress)
-    .where(eq(workflowProgress.workflowName, WORKFLOW_NAME))
-    .limit(1);
-
-  if (progress.length === 0) {
-    await db.insert(workflowProgress).values({
-      workflowName: WORKFLOW_NAME,
-      lastProcessedIndex: 0,
-    });
-    progress = await db
-      .select()
-      .from(workflowProgress)
-      .where(eq(workflowProgress.workflowName, WORKFLOW_NAME))
-      .limit(1);
-  }
-
-  const startIndex = progress[0].lastProcessedIndex;
-
-  logger?.info("📊 [Step0] Progress loaded", {
-    startIndex,
-  });
-
-  // Step 2: Read accounts from Google Sheets
-  logger?.info("📖 [Step1] Reading Instagram accounts from Google Sheets");
-
-  const { accounts: allAccounts } = await readGoogleSheetsTool.execute({
+  const { accounts } = await readGoogleSheetsTool.execute({
     context: {},
     mastra,
     runtimeContext,
   });
 
-  // Get next batch of accounts starting from lastProcessedIndex
-  const endIndex = Math.min(
-    startIndex + MAX_ACCOUNTS_PER_RUN,
-    allAccounts.length,
-  );
-  const accounts = allAccounts.slice(startIndex, endIndex);
-
-  logger?.info("✅ [Step1] Accounts read successfully", {
-    totalInSheet: allAccounts.length,
-    processingNow: accounts.length,
-    startIndex,
-    endIndex,
-    limit: MAX_ACCOUNTS_PER_RUN,
+  logger?.info("✅ [Step1] ALL accounts read successfully", {
+    totalAccounts: accounts.length,
+    message: "Will analyze all accounts from first to last row",
   });
-
-  if (endIndex < allAccounts.length) {
-    logger?.info("⚠️ [Step1] More accounts to process", {
-      remaining: allAccounts.length - endIndex,
-      message: `This run will process ${accounts.length} accounts (${startIndex}-${endIndex}). Run workflow again to process more.`,
-    });
-  } else {
-    logger?.info("✅ [Step1] This is the final batch", {
-      message:
-        "After this run, progress will reset to 0 for next full cycle.",
-    });
-  }
 
   // Step 2: Process each account and send findings immediately
   let totalViralReelsSent = 0;
@@ -302,22 +247,10 @@ export async function executeInstagramAnalysis(mastra: any) {
     }
   }
 
-  // Update progress for next run
-  const newIndex = endIndex >= allAccounts.length ? 0 : endIndex;
-
-  await db
-    .update(workflowProgress)
-    .set({
-      lastProcessedIndex: newIndex,
-      updatedAt: new Date(),
-    })
-    .where(eq(workflowProgress.workflowName, WORKFLOW_NAME));
-
-  logger?.info("✅ [Workflow] Analysis complete", {
+  logger?.info("✅ [Workflow] Analysis complete - ALL accounts processed", {
     totalAccountsProcessed: accountsProcessed,
     totalViralReelsSent,
-    nextStartIndex: newIndex,
-    cycleComplete: newIndex === 0,
+    totalAccountsInSheet: accounts.length,
   });
 
   return {

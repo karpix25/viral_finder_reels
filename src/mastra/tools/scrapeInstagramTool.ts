@@ -192,7 +192,7 @@ export const scrapeInstagramTool = createTool({
         timestamp: item.timestamp,
         url: item.url,
       }))
-      .slice(0, 20);
+      .slice(0, 100);
 
     // Extract followers count and related profiles from first result
     const followersCount = resultsArray[0]?.followersCount || 0;
