@@ -51,10 +51,11 @@ export const scrapeInstagramTool = createTool({
         },
         body: JSON.stringify({
           usernames: [username],
-          resultsLimit: 200,
+          resultsLimit: 100,
           resultsType: "posts",
           searchType: "user",
           searchLimit: 1,
+          addParentData: false,
         }),
       },
     );
