@@ -8,17 +8,9 @@ import { NonRetriableError } from "inngest";
 import { z } from "zod";
 
 import { sharedPostgresStorage } from "./storage";
-import { inngest, inngestServe, registerCronWorkflow } from "./inngest";
-import { instagramAnalysisWorkflow } from "./workflows/instagramAnalysisWorkflow";
-import { readGoogleSheetsTool } from "./tools/readGoogleSheetsTool";
-import { scrapeInstagramTool } from "./tools/scrapeInstagramTool";
-import { analyzeViralReelsTool } from "./tools/analyzeViralReelsTool";
-import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool";
-import { sendSingleViralReelTool } from "./tools/sendSingleViralReelTool";
 import { addAccountToSheetsTool } from "./tools/addAccountToSheetsTool";
 import { getPostOwnerTool } from "./tools/getPostOwnerTool";
 import { startTelegramBot } from "./services/telegramBot";
-import { startCronScheduler } from "./services/cronScheduler";
 
 class ProductionPinoLogger extends MastraLogger {
   protected logger: pino.Logger;
@@ -61,29 +53,15 @@ class ProductionPinoLogger extends MastraLogger {
   }
 }
 
-// Register cron workflow for development (Inngest Dev Server)
-// In production, we use the simple cron scheduler instead
-if (process.env.NODE_ENV !== "production") {
-  registerCronWorkflow(
-    `TZ=${process.env.SCHEDULE_CRON_TIMEZONE || "Europe/Moscow"} ${process.env.SCHEDULE_CRON_EXPRESSION || "0 * * * *"}`,
-    instagramAnalysisWorkflow,
-  );
-}
-
 export const mastra = new Mastra({
   storage: sharedPostgresStorage,
   agents: {},
-  workflows: { instagramAnalysisWorkflow },
+  workflows: {},
   mcpServers: {
     allTools: new MCPServer({
       name: "allTools",
       version: "1.0.0",
       tools: {
-        readGoogleSheetsTool,
-        scrapeInstagramTool,
-        analyzeViralReelsTool,
-        sendTelegramMessageTool,
-        sendSingleViralReelTool,
         addAccountToSheetsTool,
         getPostOwnerTool,
       },
@@ -135,20 +113,6 @@ export const mastra = new Mastra({
       },
     ],
     apiRoutes: [
-      // This API route is used to register the Mastra workflow (inngest function) on the inngest server
-      {
-        path: "/api/inngest",
-        method: "ALL",
-        createHandler: async ({ mastra }) => inngestServe({ mastra, inngest }),
-        // The inngestServe function integrates Mastra workflows with Inngest by:
-        // 1. Creating Inngest functions for each workflow with unique IDs (workflow.${workflowId})
-        // 2. Setting up event handlers that:
-        //    - Generate unique run IDs for each workflow execution
-        //    - Create an InngestExecutionEngine to manage step execution
-        //    - Handle workflow state persistence and real-time updates
-        // 3. Establishing a publish-subscribe system for real-time monitoring
-        //    through the workflow:${workflowId}:${runId} channel
-      },
       // API endpoint to add Instagram accounts to Google Sheets
       {
         path: "/api/add-account",
@@ -217,7 +181,8 @@ if (Object.keys(mastra.getAgents()).length > 1) {
 
 // Start Telegram bot for processing Instagram links from group chat
 // Note: Telegram only allows ONE polling connection per token
-// The bot should run in production to process links automatically
+// This bot ONLY adds accounts to Google Sheets
+// The hourly Instagram analysis is done by a separate Scheduled Deployment project
 startTelegramBot(mastra).catch((error) => {
   const logger = mastra.getLogger();
   logger?.error("❌ [Main] Failed to start Telegram bot", {
@@ -227,14 +192,6 @@ startTelegramBot(mastra).catch((error) => {
   logger?.warn("💡 [Main] To add accounts, use Google Sheets directly or curl API");
 });
 
-// Start cron scheduler for production deployments
-console.log("🔧 [Main] About to start CronScheduler", {
-  nodeEnv: process.env.NODE_ENV,
-});
-
-try {
-  startCronScheduler(mastra);
-  console.log("✅ [Main] CronScheduler started successfully");
-} catch (error: any) {
-  console.error("❌ [Main] Failed to start CronScheduler", error);
-}
+console.log("✅ [Main] Telegram Bot project initialized (Autoscale mode)");
+console.log("💡 [Main] This project ONLY handles adding accounts via Telegram bot");
+console.log("💡 [Main] Hourly Instagram analysis is handled by separate Scheduled Deployment project");
