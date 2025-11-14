@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { asc, sql } from "drizzle-orm";
+import { db } from "../storage/index.js";
 import { accountCheckHistory } from "../storage/schema.js";
 
 export const getAccountPrioritiesTool = createTool({
@@ -21,13 +22,6 @@ export const getAccountPrioritiesTool = createTool({
     logger?.info("🔧 [GetAccountPriorities] Starting execution", { 
       totalAccounts: allUsernames.length 
     });
-    
-    const storage = mastra?.storage as any;
-    if (!storage?.db) {
-      throw new Error("Database not available");
-    }
-    
-    const db = storage.db;
     
     try {
       // Get all check history, ordered by oldest checks first

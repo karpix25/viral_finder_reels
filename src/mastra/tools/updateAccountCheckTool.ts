@@ -1,6 +1,7 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { eq, sql } from "drizzle-orm";
+import { db } from "../storage/index.js";
 import { accountCheckHistory } from "../storage/schema.js";
 
 export const updateAccountCheckTool = createTool({
@@ -21,13 +22,6 @@ export const updateAccountCheckTool = createTool({
     const { username, viralReelsFound } = context;
     
     logger?.info("🔧 [UpdateAccountCheck] Starting execution", { username, viralReelsFound });
-    
-    const storage = mastra?.storage as any;
-    if (!storage?.db) {
-      throw new Error("Database not available");
-    }
-    
-    const db = storage.db;
     
     try {
       // Upsert account check history
