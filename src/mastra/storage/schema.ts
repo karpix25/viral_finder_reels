@@ -15,3 +15,12 @@ export const workflowProgress = pgTable("workflow_progress", {
   lastProcessedIndex: integer("last_processed_index").notNull().default(0),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Table to track when each account was last checked (for smart prioritization)
+export const accountCheckHistory = pgTable("account_check_history", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  lastCheckedAt: timestamp("last_checked_at").defaultNow().notNull(),
+  totalChecks: integer("total_checks").notNull().default(1),
+  lastViralReelsFound: integer("last_viral_reels_found").notNull().default(0),
+});

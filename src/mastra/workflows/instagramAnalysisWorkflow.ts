@@ -3,6 +3,8 @@ import { z } from "zod";
 import { readGoogleSheetsTool } from "../tools/readGoogleSheetsTool";
 import { scrapeInstagramTool } from "../tools/scrapeInstagramTool";
 import { sendSingleViralReelTool } from "../tools/sendSingleViralReelTool";
+import { getAccountPrioritiesTool } from "../tools/getAccountPrioritiesTool";
+import { updateAccountCheckTool } from "../tools/updateAccountCheckTool";
 import { RuntimeContext } from "@mastra/core/di";
 
 const runtimeContext = new RuntimeContext();
@@ -30,11 +32,27 @@ export async function executeInstagramAnalysis(mastra: any) {
     message: "Will analyze all accounts from first to last row",
   });
 
+  // Step 1.5: Prioritize accounts by last check time (never checked first, then oldest)
+  logger?.info("🎯 [Step1.5] Prioritizing accounts based on last check time");
+  
+  const { prioritizedUsernames, neverChecked, oldestCheckAge } = await getAccountPrioritiesTool.execute({
+    context: { allUsernames: accounts },
+    mastra,
+    runtimeContext,
+  });
+  
+  logger?.info("✅ [Step1.5] Accounts prioritized", {
+    totalAccounts: prioritizedUsernames.length,
+    neverChecked,
+    oldestCheckAge: oldestCheckAge || "N/A",
+    message: "Never-checked accounts first, then oldest checks"
+  });
+
   // Step 2: Process each account and send findings immediately
   let totalViralReelsSent = 0;
   let accountsProcessed = 0;
 
-  for (const accountUrl of accounts) {
+  for (const accountUrl of prioritizedUsernames) {
     try {
       logger?.info("📝 [Step2] Processing account", { accountUrl });
 
@@ -51,12 +69,26 @@ export async function executeInstagramAnalysis(mastra: any) {
       });
 
       accountsProcessed++;
+      
+      // Track viral reels found for this account
+      let viralReelsFoundForAccount = 0;
 
       // Analyze each reel for virality
       if (accountData.reels.length === 0) {
         logger?.info("⏭️ [Step2] No reels found, skipping", {
           username: accountData.username,
         });
+        
+        // Update check history even if no reels found
+        await updateAccountCheckTool.execute({
+          context: {
+            username: accountData.username,
+            viralReelsFound: 0,
+          },
+          mastra,
+          runtimeContext,
+        });
+        
         continue;
       }
 
@@ -225,6 +257,7 @@ export async function executeInstagramAnalysis(mastra: any) {
             });
 
             totalViralReelsSent++;
+            viralReelsFoundForAccount++;
 
             logger?.info("✅ [Step2] Viral reel sent to Telegram", {
               username: accountData.username,
@@ -239,11 +272,45 @@ export async function executeInstagramAnalysis(mastra: any) {
           }
         }
       }
+      
+      // Update check history after processing this account
+      logger?.info("📝 [Step2] Updating check history", {
+        username: accountData.username,
+        viralReelsFound: viralReelsFoundForAccount,
+      });
+      
+      await updateAccountCheckTool.execute({
+        context: {
+          username: accountData.username,
+          viralReelsFound: viralReelsFoundForAccount,
+        },
+        mastra,
+        runtimeContext,
+      });
+      
     } catch (error) {
       logger?.error("❌ [Step2] Error processing account", {
         accountUrl,
         error: String(error),
       });
+      
+      // Update check history even on error (to avoid re-checking failed accounts immediately)
+      try {
+        const username = accountUrl.replace(/^@/, "").split("/").pop() || accountUrl;
+        await updateAccountCheckTool.execute({
+          context: {
+            username,
+            viralReelsFound: 0,
+          },
+          mastra,
+          runtimeContext,
+        });
+      } catch (updateError) {
+        logger?.error("❌ [Step2] Failed to update check history after error", {
+          accountUrl,
+          error: String(updateError),
+        });
+      }
     }
   }
 

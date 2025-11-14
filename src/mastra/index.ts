@@ -10,6 +10,8 @@ import { scrapeInstagramTool } from "./tools/scrapeInstagramTool.js";
 import { analyzeViralReelsTool } from "./tools/analyzeViralReelsTool.js";
 import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool.js";
 import { sendSingleViralReelTool } from "./tools/sendSingleViralReelTool.js";
+import { getAccountPrioritiesTool } from "./tools/getAccountPrioritiesTool.js";
+import { updateAccountCheckTool } from "./tools/updateAccountCheckTool.js";
 
 class ProductionPinoLogger extends MastraLogger {
   protected logger: pino.Logger;
@@ -66,6 +68,8 @@ export const mastra = new Mastra({
         analyzeViralReelsTool,
         sendTelegramMessageTool,
         sendSingleViralReelTool,
+        getAccountPrioritiesTool,
+        updateAccountCheckTool,
       },
     }),
   },
