@@ -41,6 +41,7 @@
     "googleapis": "^161.0.0",
     "inngest": "^3.40.2",
     "inngest-cli": "^1.11.5",
+    "mastra": "^0.18.1",
     "node-cron": "^4.2.1",
     "pino": "^9.9.4",
     "telegraf": "^4.16.3",
