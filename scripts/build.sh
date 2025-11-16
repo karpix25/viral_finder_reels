@@ -18,8 +18,9 @@ SCRIPT_EOF
 
 chmod +x .mastra/output/start-production.sh
 
-# Create index.mjs that runs mastra dev (spawn approach restored)
+# Create index.mjs with instant health check server
 cat > .mastra/output/index.mjs << 'EOF'
+import http from 'http';
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
@@ -29,29 +30,36 @@ const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
 
 console.log('🚀 [Production] Starting Instagram Analyzer');
-console.log('⏰ [Production] Hourly cron: 0 * * * *');
 
-// Run mastra dev
-const child = spawn('npx', ['mastra', 'dev'], {
-  cwd: projectRoot,
-  env: {
-    ...process.env,
-    NODE_ENV: 'production',
-  },
-  stdio: 'inherit',
+// INSTANT health check server - opens port 5000 immediately
+const healthServer = http.createServer((req, res) => {
+  res.writeHead(200);
+  res.end('OK');
 });
 
-child.on('error', (err) => {
-  console.error('❌ [Production] Failed:', err);
-  process.exit(1);
-});
+healthServer.listen(5000, '0.0.0.0', () => {
+  console.log('✅ [Production] Health check server ready on :5000');
+  console.log('⏰ [Production] Hourly cron: 0 * * * *');
+  
+  // Now start Mastra (will take over port 5000)
+  healthServer.close(() => {
+    const child = spawn('npx', ['mastra', 'dev'], {
+      cwd: projectRoot,
+      env: { ...process.env, NODE_ENV: 'production' },
+      stdio: 'inherit',
+    });
 
-child.on('exit', (code) => {
-  process.exit(code || 0);
-});
+    child.on('error', (err) => {
+      console.error('❌ [Production] Failed:', err);
+      process.exit(1);
+    });
 
-process.on('SIGTERM', () => child.kill('SIGTERM'));
-process.on('SIGINT', () => child.kill('SIGINT'));
+    child.on('exit', (code) => process.exit(code || 0));
+    
+    process.on('SIGTERM', () => child.kill('SIGTERM'));
+    process.on('SIGINT', () => child.kill('SIGINT'));
+  });
+});
 EOF
 
 echo "✅ Production wrapper created successfully!"
