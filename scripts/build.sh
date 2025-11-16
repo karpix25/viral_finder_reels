@@ -18,7 +18,7 @@ SCRIPT_EOF
 
 chmod +x .mastra/output/start-production.sh
 
-# Create simple index.mjs that runs mastra dev with built-in cron scheduler
+# Create index.mjs that runs mastra dev (spawn approach restored)
 cat > .mastra/output/index.mjs << 'EOF'
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -28,12 +28,10 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
 
-console.log('🚀 [Autoscale Deployment] Starting Mastra with hourly cron scheduler');
-console.log('📝 [Autoscale Deployment] Project root:', projectRoot);
-console.log('⏰ [Autoscale Deployment] Web server + cron job (0 * * * *)');
+console.log('🚀 [Production] Starting Instagram Analyzer');
+console.log('⏰ [Production] Hourly cron: 0 * * * *');
 
-// Run mastra dev with NODE_ENV=production
-// This starts web server on port 5000 + activates node-cron scheduler
+// Run mastra dev
 const child = spawn('npx', ['mastra', 'dev'], {
   cwd: projectRoot,
   env: {
@@ -44,18 +42,14 @@ const child = spawn('npx', ['mastra', 'dev'], {
 });
 
 child.on('error', (err) => {
-  console.error('❌ [Autoscale Deployment] Failed to start Mastra:', err);
+  console.error('❌ [Production] Failed:', err);
   process.exit(1);
 });
 
 child.on('exit', (code) => {
-  if (code !== 0) {
-    console.log(`⏹️ [Autoscale Deployment] Mastra exited with code ${code}`);
-  }
   process.exit(code || 0);
 });
 
-// Graceful shutdown
 process.on('SIGTERM', () => child.kill('SIGTERM'));
 process.on('SIGINT', () => child.kill('SIGINT'));
 EOF
