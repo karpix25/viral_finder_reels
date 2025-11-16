@@ -3,6 +3,7 @@ import { PinoLogger } from "@mastra/loggers";
 import { LogLevel, MastraLogger } from "@mastra/core/logger";
 import pino from "pino";
 import { MCPServer } from "@mastra/mcp";
+import cron from "node-cron";
 
 import { sharedPostgresStorage } from "./storage/index.js";
 import { readGoogleSheetsTool } from "./tools/readGoogleSheetsTool.js";
@@ -12,6 +13,7 @@ import { sendTelegramMessageTool } from "./tools/sendTelegramMessageTool.js";
 import { sendSingleViralReelTool } from "./tools/sendSingleViralReelTool.js";
 import { getAccountPrioritiesTool } from "./tools/getAccountPrioritiesTool.js";
 import { updateAccountCheckTool } from "./tools/updateAccountCheckTool.js";
+import { executeInstagramAnalysis } from "./workflows/instagramAnalysisWorkflow.js";
 
 class ProductionPinoLogger extends MastraLogger {
   protected logger: pino.Logger;
@@ -101,3 +103,35 @@ export const mastra = new Mastra({
 console.log("✅ [Main] Instagram Analyzer project initialized (Scheduled mode)");
 console.log("💡 [Main] This project ONLY handles hourly Instagram analysis");
 console.log("💡 [Main] Account management is handled by separate Telegram Bot project");
+
+// Start hourly cron job ONLY in production
+if (process.env.NODE_ENV === "production") {
+  const logger = mastra.getLogger();
+  
+  logger?.info("⏰ [Cron] Configuring hourly Instagram analysis job");
+  logger?.info("⏰ [Cron] Schedule: Every hour at :00 minutes (0 * * * *)");
+  
+  // Run every hour at :00 minutes
+  cron.schedule("0 * * * *", async () => {
+    const now = new Date().toISOString();
+    logger?.info("🚀 [Cron] Starting hourly Instagram analysis", { time: now });
+    
+    try {
+      const result = await executeInstagramAnalysis(mastra);
+      
+      logger?.info("✅ [Cron] Analysis completed successfully", {
+        totalAccountsProcessed: result.totalAccountsProcessed,
+        totalViralReelsSent: result.totalViralReelsSent,
+        time: new Date().toISOString(),
+      });
+    } catch (error: any) {
+      logger?.error("❌ [Cron] Analysis failed", {
+        error: error.message,
+        stack: error.stack,
+        time: new Date().toISOString(),
+      });
+    }
+  });
+  
+  logger?.info("✅ [Cron] Hourly scheduler started successfully");
+}
