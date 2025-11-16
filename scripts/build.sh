@@ -18,7 +18,7 @@ SCRIPT_EOF
 
 chmod +x .mastra/output/start-production.sh
 
-# Create simple index.mjs that runs mastra dev with cron scheduler enabled
+# Create simple index.mjs that runs scheduled Instagram analysis script
 cat > .mastra/output/index.mjs << 'EOF'
 import { spawn } from 'child_process';
 import { fileURLToPath } from 'url';
@@ -28,13 +28,12 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const projectRoot = join(__dirname, '../..');
 
-console.log('🚀 [Wrapper] Starting Mastra with HOURLY CRON SCHEDULER');
-console.log('📝 [Wrapper] Project root:', projectRoot);
-console.log('⏰ [Wrapper] Cron job will run Instagram analysis every hour at :00 minutes');
+console.log('🚀 [Scheduled Deployment] Starting Instagram Analysis');
+console.log('📝 [Scheduled Deployment] Project root:', projectRoot);
+console.log('⏰ [Scheduled Deployment] Triggered by Replit cron: 0 * * * * (hourly)');
 
-// Run mastra dev with NODE_ENV=production to enable cron scheduler
-// The cron scheduler is configured in src/mastra/index.ts
-const child = spawn('npx', ['mastra', 'dev'], {
+// Run the scheduled script - executes workflow and exits
+const child = spawn('npx', ['tsx', 'src/run-scheduled.ts'], {
   cwd: projectRoot,
   env: {
     ...process.env,
@@ -44,14 +43,12 @@ const child = spawn('npx', ['mastra', 'dev'], {
 });
 
 child.on('error', (err) => {
-  console.error('❌ [Wrapper] Failed to start Mastra:', err);
+  console.error('❌ [Scheduled Deployment] Failed to start:', err);
   process.exit(1);
 });
 
 child.on('exit', (code) => {
-  if (code !== 0) {
-    console.log(`⏹️ [Wrapper] Mastra exited with code ${code}`);
-  }
+  console.log(`✅ [Scheduled Deployment] Completed with exit code ${code}`);
   process.exit(code || 0);
 });
 
