@@ -7,6 +7,7 @@ import {
   getAppSettings,
   updateAppSettings,
 } from "./mastra/services/settings.js";
+import { executeInstagramAnalysis } from "./mastra/workflows/instagramAnalysisWorkflow.js";
 
 const app = new Hono();
 
@@ -126,6 +127,16 @@ const html = `<!doctype html>
       color: #059669;
       font-size: 14px;
     }
+    .btn-secondary {
+      background: #e5e7eb;
+      color: #111827;
+      box-shadow: none;
+    }
+    .header-actions {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+    }
   </style>
 </head>
 <body>
@@ -135,7 +146,10 @@ const html = `<!doctype html>
         <div class="pill">Insta Viral Control</div>
         <h1>Настройки парсера</h1>
       </div>
-      <button id="refresh">Обновить</button>
+      <div class="header-actions">
+        <button id="refresh">Обновить</button>
+        <button id="test-run-top" class="btn-secondary">Тестовый запуск</button>
+      </div>
     </header>
     <div class="grid">
       <div class="card">
@@ -190,6 +204,7 @@ const html = `<!doctype html>
     </div>
     <div class="actions">
       <button id="save">Сохранить</button>
+      <button id="test-run" class="btn-secondary">Тестовый запуск</button>
       <span class="status" id="status"></span>
     </div>
   </div>
@@ -250,8 +265,21 @@ const html = `<!doctype html>
       statusEl.textContent = 'Сохранено';
     }
 
+    async function runTest() {
+      statusEl.textContent = 'Тестовый запуск...';
+      const res = await fetch('/api/test-run', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        statusEl.textContent = 'Запущено: ' + JSON.stringify(data);
+      } else {
+        statusEl.textContent = 'Ошибка тестового запуска: ' + (data.error || res.status);
+      }
+    }
+
     document.getElementById('save').addEventListener('click', saveSettings);
     document.getElementById('refresh').addEventListener('click', loadSettings);
+    document.getElementById('test-run').addEventListener('click', runTest);
+    document.getElementById('test-run-top').addEventListener('click', runTest);
     loadSettings();
   </script>
 </body>
@@ -301,6 +329,24 @@ app.post("/api/settings", async (c) => {
   } catch (err: any) {
     console.error("Failed to save settings", err);
     return c.json({ error: "Failed to save settings", details: String(err) }, 500);
+  }
+});
+
+app.post("/api/test-run", async (c) => {
+  try {
+    console.log("▶️ [API] POST /api/test-run");
+    // Fire-and-forget so UI returns instantly; workflow logs progress.
+    executeInstagramAnalysis(mastra)
+      .then(() => {
+        console.log("✅ [API] Test run completed");
+      })
+      .catch((err) => {
+        console.error("❌ [API] Test run failed", err);
+      });
+    return c.json({ status: "started" });
+  } catch (err: any) {
+    console.error("Failed to start test run", err);
+    return c.json({ error: "Failed to start test run", details: String(err) }, 500);
   }
 });
 
