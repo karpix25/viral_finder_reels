@@ -1,7 +1,6 @@
-import { db } from "../storage";
+import { db, pool } from "../storage";
 import { appSettings } from "../storage/schema";
 import { eq } from "drizzle-orm";
-import { sql } from "drizzle-orm";
 
 export type AppSettings = {
   schedulerMode: "daily" | "weekly";
@@ -27,16 +26,14 @@ let ensured = false;
 export async function ensureAppSettingsTable() {
   if (ensured) return;
   try {
-    await db.execute(
-      sql.raw(`
-        CREATE TABLE IF NOT EXISTS app_settings (
-          id SERIAL PRIMARY KEY,
-          key VARCHAR(100) UNIQUE NOT NULL,
-          value JSONB NOT NULL,
-          updated_at TIMESTAMP DEFAULT now() NOT NULL
-        );
-      `),
-    );
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS app_settings (
+        id SERIAL PRIMARY KEY,
+        key VARCHAR(100) UNIQUE NOT NULL,
+        value JSONB NOT NULL,
+        updated_at TIMESTAMP DEFAULT now() NOT NULL
+      );
+    `);
     ensured = true;
   } catch (error) {
     ensured = false;
