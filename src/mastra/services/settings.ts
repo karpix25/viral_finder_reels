@@ -24,17 +24,24 @@ const DEFAULT_SETTINGS: AppSettings = {
 const SETTINGS_KEY = "default";
 
 let ensured = false;
-async function ensureAppSettingsTable() {
+export async function ensureAppSettingsTable() {
   if (ensured) return;
-  await db.execute(sql`
-    CREATE TABLE IF NOT EXISTS app_settings (
-      id SERIAL PRIMARY KEY,
-      key VARCHAR(100) UNIQUE NOT NULL,
-      value JSONB NOT NULL,
-      updated_at TIMESTAMP DEFAULT now() NOT NULL
+  try {
+    await db.execute(
+      sql.raw(`
+        CREATE TABLE IF NOT EXISTS app_settings (
+          id SERIAL PRIMARY KEY,
+          key VARCHAR(100) UNIQUE NOT NULL,
+          value JSONB NOT NULL,
+          updated_at TIMESTAMP DEFAULT now() NOT NULL
+        );
+      `),
     );
-  `);
-  ensured = true;
+    ensured = true;
+  } catch (error) {
+    ensured = false;
+    throw error;
+  }
 }
 
 export async function getAppSettings(): Promise<AppSettings> {

@@ -2,7 +2,7 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { mastra } from "./mastra/index.js";
 import { startCronScheduler } from "./mastra/services/cronScheduler.js";
-import { getAppSettings, updateAppSettings } from "./mastra/services/settings.js";
+import { ensureAppSettingsTable, getAppSettings, updateAppSettings } from "./mastra/services/settings.js";
 
 const app = new Hono();
 
@@ -277,12 +277,18 @@ app.post("/api/settings", async (c) => {
 
 startCronScheduler(mastra);
 
-serve(
-  {
-    fetch: app.fetch,
-    port,
-  },
-  () => {
-    console.log(`🖥️  UI ready on http://0.0.0.0:${port}`);
-  },
-);
+ensureAppSettingsTable()
+  .catch((err) => {
+    console.error("Failed to ensure app_settings table", err);
+  })
+  .finally(() => {
+    serve(
+      {
+        fetch: app.fetch,
+        port,
+      },
+      () => {
+        console.log(`🖥️  UI ready on http://0.0.0.0:${port}`);
+      },
+    );
+  });
