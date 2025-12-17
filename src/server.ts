@@ -9,6 +9,7 @@ import {
 } from "./mastra/services/settings.js";
 import { executeInstagramAnalysis } from "./mastra/workflows/instagramAnalysisWorkflow.js";
 import { seedInstagramAccountsFromFile } from "./mastra/services/accounts.js";
+import { startTelegramBot } from "./mastra/services/telegramBot.js";
 
 const app = new Hono();
 
@@ -351,7 +352,11 @@ app.post("/api/test-run", async (c) => {
   }
 });
 
-Promise.all([ensureAppSettingsTable(), seedInstagramAccountsFromFile()])
+Promise.all([
+  ensureAppSettingsTable(),
+  seedInstagramAccountsFromFile(),
+  startTelegramBot(mastra),
+])
   .catch((err) => {
     console.error("Failed to run startup tasks", err);
   })
