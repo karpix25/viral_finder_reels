@@ -5,7 +5,7 @@ services:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/mastra}
       RAPIDAPI_HOST: ${RAPIDAPI_HOST:-instagram-social-api.p.rapidapi.com}
     ports:
-      - "3000:3000"
+      - "3005:3000"
     depends_on:
       - db
     restart: unless-stopped
