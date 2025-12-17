@@ -52,12 +52,12 @@ export async function getAppSettings(): Promise<AppSettings> {
     .limit(1);
   if (!rows.length) return DEFAULT_SETTINGS;
   const value = rows[0].value as Partial<AppSettings>;
+  const schedulerMode =
+    value.schedulerMode === "weekly" ? "weekly" : "daily";
+
   return {
-    schedulerMode: (value.schedulerMode as AppSettings["schedulerMode"]) ??
-      (value as any).schedulerMinutes
-        ? "daily"
-        : DEFAULT_SETTINGS.schedulerMode,
-    dailyTime: value.dailyTime ?? "09:00",
+    schedulerMode,
+    dailyTime: value.dailyTime ?? DEFAULT_SETTINGS.dailyTime,
     weeklyDay: value.weeklyDay ?? DEFAULT_SETTINGS.weeklyDay,
     weeklyTime: value.weeklyTime ?? DEFAULT_SETTINGS.weeklyTime,
     postsPerAccount: value.postsPerAccount ?? DEFAULT_SETTINGS.postsPerAccount,
