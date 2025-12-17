@@ -247,32 +247,42 @@ const html = `<!doctype html>
 app.get("/", (c) => c.html(html));
 
 app.get("/api/settings", async (c) => {
-  const settings = await getAppSettings();
-  return c.json(settings);
+  try {
+    const settings = await getAppSettings();
+    return c.json(settings);
+  } catch (err: any) {
+    console.error("Failed to read settings", err);
+    return c.json({ error: "Failed to read settings", details: String(err) }, 500);
+  }
 });
 
 app.post("/api/settings", async (c) => {
-  const body = await c.req.json();
-  const schedulerMode =
-    body.schedulerMode === "weekly" ? "weekly" : "daily";
-  const dailyTime = typeof body.dailyTime === "string" ? body.dailyTime : "09:00";
-  const weeklyDay = Number.isInteger(body.weeklyDay)
-    ? Math.min(6, Math.max(0, body.weeklyDay))
-    : 1;
-  const weeklyTime = typeof body.weeklyTime === "string" ? body.weeklyTime : "09:00";
-  const postsPerAccount = Math.min(200, Math.max(1, Number(body.postsPerAccount || 0)));
-  const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
+  try {
+    const body = await c.req.json();
+    const schedulerMode =
+      body.schedulerMode === "weekly" ? "weekly" : "daily";
+    const dailyTime = typeof body.dailyTime === "string" ? body.dailyTime : "09:00";
+    const weeklyDay = Number.isInteger(body.weeklyDay)
+      ? Math.min(6, Math.max(0, body.weeklyDay))
+      : 1;
+    const weeklyTime = typeof body.weeklyTime === "string" ? body.weeklyTime : "09:00";
+    const postsPerAccount = Math.min(200, Math.max(1, Number(body.postsPerAccount || 0)));
+    const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
 
-  const updated = await updateAppSettings({
-    schedulerMode,
-    dailyTime,
-    weeklyDay,
-    weeklyTime,
-    postsPerAccount,
-    viralityFormula,
-  });
+    const updated = await updateAppSettings({
+      schedulerMode,
+      dailyTime,
+      weeklyDay,
+      weeklyTime,
+      postsPerAccount,
+      viralityFormula,
+    });
 
-  return c.json(updated);
+    return c.json(updated);
+  } catch (err: any) {
+    console.error("Failed to save settings", err);
+    return c.json({ error: "Failed to save settings", details: String(err) }, 500);
+  }
 });
 
 startCronScheduler(mastra);

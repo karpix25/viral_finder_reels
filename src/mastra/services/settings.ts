@@ -45,30 +45,26 @@ export async function ensureAppSettingsTable() {
 }
 
 export async function getAppSettings(): Promise<AppSettings> {
-  try {
-    await ensureAppSettingsTable();
-    const rows = await db
-      .select()
-      .from(appSettings)
-      .where(eq(appSettings.key, SETTINGS_KEY))
-      .limit(1);
-    if (!rows.length) return DEFAULT_SETTINGS;
-    const value = rows[0].value as Partial<AppSettings>;
-    return {
-      schedulerMode: (value.schedulerMode as AppSettings["schedulerMode"]) ??
-        (value as any).schedulerMinutes
+  await ensureAppSettingsTable();
+  const rows = await db
+    .select()
+    .from(appSettings)
+    .where(eq(appSettings.key, SETTINGS_KEY))
+    .limit(1);
+  if (!rows.length) return DEFAULT_SETTINGS;
+  const value = rows[0].value as Partial<AppSettings>;
+  return {
+    schedulerMode: (value.schedulerMode as AppSettings["schedulerMode"]) ??
+      (value as any).schedulerMinutes
         ? "daily"
         : DEFAULT_SETTINGS.schedulerMode,
-      dailyTime: value.dailyTime ?? "09:00",
-      weeklyDay: value.weeklyDay ?? DEFAULT_SETTINGS.weeklyDay,
-      weeklyTime: value.weeklyTime ?? DEFAULT_SETTINGS.weeklyTime,
-      postsPerAccount: value.postsPerAccount ?? DEFAULT_SETTINGS.postsPerAccount,
-      viralityFormula: (value.viralityFormula as AppSettings["viralityFormula"]) ??
-        DEFAULT_SETTINGS.viralityFormula,
-    };
-  } catch {
-    return DEFAULT_SETTINGS;
-  }
+    dailyTime: value.dailyTime ?? "09:00",
+    weeklyDay: value.weeklyDay ?? DEFAULT_SETTINGS.weeklyDay,
+    weeklyTime: value.weeklyTime ?? DEFAULT_SETTINGS.weeklyTime,
+    postsPerAccount: value.postsPerAccount ?? DEFAULT_SETTINGS.postsPerAccount,
+    viralityFormula: (value.viralityFormula as AppSettings["viralityFormula"]) ??
+      DEFAULT_SETTINGS.viralityFormula,
+  };
 }
 
 export async function updateAppSettings(payload: Partial<AppSettings>): Promise<AppSettings> {
