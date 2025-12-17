@@ -8,7 +8,7 @@ export const getAccountPrioritiesTool = createTool({
   id: "getAccountPriorities",
   description: "Get account check priorities - accounts that haven't been checked recently are prioritized",
   inputSchema: z.object({
-    allUsernames: z.array(z.string()).describe("All usernames from Google Sheets"),
+    allUsernames: z.array(z.string()).describe("All usernames from storage"),
   }),
   outputSchema: z.object({
     prioritizedUsernames: z.array(z.string()).describe("Usernames sorted by priority (never checked first, then oldest checks)"),

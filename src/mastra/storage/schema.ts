@@ -7,6 +7,13 @@ import {
   jsonb,
 } from "drizzle-orm/pg-core";
 
+// Table to store Instagram accounts (replaces Google Sheets list)
+export const instagramAccounts = pgTable("instagram_accounts", {
+  id: serial("id").primaryKey(),
+  username: varchar("username", { length: 255 }).notNull().unique(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Table to track sent viral reels (prevent duplicates)
 export const sentViralReels = pgTable("sent_viral_reels", {
   id: serial("id").primaryKey(),

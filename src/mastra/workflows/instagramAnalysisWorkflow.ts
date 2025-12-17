@@ -11,16 +11,16 @@ import { getAppSettings } from "../services/settings";
 const runtimeContext = new RuntimeContext();
 
 // Process ALL accounts in a single run - from first to last row
-// Each hourly run analyzes the entire Google Sheets list (1000+ accounts)
+// The account list now lives in Postgres (instagram_accounts)
 // Each account analyzed for up to 100 latest reels/carousels
 export async function executeInstagramAnalysis(mastra: any) {
   const logger = mastra?.getLogger();
   logger?.info(
-    "🚀 [Workflow] Starting Instagram viral analysis - processing ALL accounts from first to last row",
+    "🚀 [Workflow] Starting Instagram viral analysis - processing ALL accounts from DB list (first to last)",
   );
 
-  // Step 1: Read ALL accounts from Google Sheets (from first to last row)
-  logger?.info("📖 [Step1] Reading ALL Instagram accounts from Google Sheets");
+  // Step 1: Read ALL accounts from DB (ordered by created_at)
+  logger?.info("📖 [Step1] Reading ALL Instagram accounts from Postgres storage");
 
   const { accounts } = await readGoogleSheetsTool.execute({
     context: {},
