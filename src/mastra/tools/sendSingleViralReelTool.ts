@@ -107,10 +107,17 @@ export const sendSingleViralReelTool = createTool({
 
     // Escape HTML characters in caption
     const escapeHtml = (text: string) => {
-      return text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      // Normalize to NFC to avoid Telegram UTF-8 errors, then escape HTML
+      const normalized = text.normalize("NFC");
+      return normalized
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     };
 
-    const captionText = caption ? escapeHtml(caption.slice(0, 100) + (caption.length > 100 ? "..." : "")) : "";
+    const captionText = caption
+      ? escapeHtml(caption.slice(0, 100) + (caption.length > 100 ? "..." : ""))
+      : "";
     
     // Determine content emoji and name
     const contentEmoji = contentType === "Sidecar" ? "🖼" : "🎬";
