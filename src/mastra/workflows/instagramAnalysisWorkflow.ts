@@ -36,6 +36,11 @@ export async function executeInstagramAnalysis(mastra: any) {
   const appSettings = await getAppSettings();
   const postsPerAccount = Math.max(1, appSettings.postsPerAccount || 100);
   const viralityFormula = appSettings.viralityFormula || "current";
+  const testAccountsLimit =
+    typeof appSettings.testAccountsLimit === "number" &&
+    appSettings.testAccountsLimit > 0
+      ? appSettings.testAccountsLimit
+      : 0;
 
   logger?.info("⚙️ [Workflow] Settings loaded", {
     schedulerMode: appSettings.schedulerMode,
@@ -44,6 +49,7 @@ export async function executeInstagramAnalysis(mastra: any) {
     weeklyTime: appSettings.weeklyTime,
     postsPerAccount,
     viralityFormula,
+    testAccountsLimit,
   });
 
   // Step 1.5: Prioritize accounts by last check time (never checked first, then oldest)
@@ -67,6 +73,12 @@ export async function executeInstagramAnalysis(mastra: any) {
   let accountsProcessed = 0;
 
   for (const accountUrl of prioritizedUsernames) {
+    if (testAccountsLimit > 0 && accountsProcessed >= testAccountsLimit) {
+      logger?.info("⏹️ [Workflow] Test limit reached, stopping early", {
+        testAccountsLimit,
+      });
+      break;
+    }
     try {
       logger?.info("📝 [Step2] Processing account", { accountUrl });
 

@@ -9,6 +9,7 @@ export type AppSettings = {
   weeklyTime: string; // HH:MM (UTC)
   postsPerAccount: number; // how many posts/reels to analyze per account
   viralityFormula: "current" | "shares";
+  testAccountsLimit: number; // 0 = all, >0 limit accounts per run
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -18,6 +19,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   weeklyTime: "09:00",
   postsPerAccount: 100,
   viralityFormula: "current",
+  testAccountsLimit: 0,
 };
 
 const SETTINGS_KEY = "default";
@@ -63,6 +65,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     postsPerAccount: value.postsPerAccount ?? DEFAULT_SETTINGS.postsPerAccount,
     viralityFormula: (value.viralityFormula as AppSettings["viralityFormula"]) ??
       DEFAULT_SETTINGS.viralityFormula,
+    testAccountsLimit: value.testAccountsLimit ?? DEFAULT_SETTINGS.testAccountsLimit,
   };
 }
 
@@ -76,6 +79,8 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     weeklyTime: payload.weeklyTime ?? current.weeklyTime,
     postsPerAccount: payload.postsPerAccount ?? current.postsPerAccount,
     viralityFormula: payload.viralityFormula ?? current.viralityFormula,
+    testAccountsLimit:
+      payload.testAccountsLimit ?? current.testAccountsLimit ?? 0,
   };
 
   await db

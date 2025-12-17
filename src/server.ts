@@ -175,6 +175,11 @@ const html = `<!doctype html>
         <div class="muted">Сколько последних постов/рилсов анализировать для каждого аккаунта.</div>
       </div>
       <div class="card">
+        <label for="testAccountsLimit">Лимит аккаунтов за запуск</label>
+        <input type="number" id="testAccountsLimit" min="0" max="10" />
+        <div class="muted">0 — все, 1-10 — ограничить количество аккаунтов в прогоне.</div>
+      </div>
+      <div class="card">
         <label for="viralityFormula">Формула виральности</label>
         <select id="viralityFormula">
           <option value="current">Текущая (views/engagement)</option>
@@ -196,6 +201,7 @@ const html = `<!doctype html>
     const weeklyDaySelect = document.getElementById('weeklyDay');
     const weeklyTimeInput = document.getElementById('weeklyTime');
     const postsInput = document.getElementById('postsPerAccount');
+    const testAccountsInput = document.getElementById('testAccountsLimit');
     const formulaSelect = document.getElementById('viralityFormula');
 
     async function loadSettings() {
@@ -207,6 +213,7 @@ const html = `<!doctype html>
       weeklyDaySelect.value = String(data.weeklyDay);
       weeklyTimeInput.value = data.weeklyTime;
       postsInput.value = data.postsPerAccount;
+      testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       statusEl.textContent = 'Готово';
     }
@@ -219,6 +226,7 @@ const html = `<!doctype html>
         weeklyDay: Number(weeklyDaySelect.value),
         weeklyTime: weeklyTimeInput.value,
         postsPerAccount: Number(postsInput.value),
+        testAccountsLimit: Number(testAccountsInput.value),
         viralityFormula: formulaSelect.value,
       };
       const res = await fetch('/api/settings', {
@@ -237,6 +245,7 @@ const html = `<!doctype html>
       weeklyDaySelect.value = String(data.weeklyDay);
       weeklyTimeInput.value = data.weeklyTime;
       postsInput.value = data.postsPerAccount;
+      testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       statusEl.textContent = 'Сохранено';
     }
@@ -274,6 +283,7 @@ app.post("/api/settings", async (c) => {
       : 1;
     const weeklyTime = typeof body.weeklyTime === "string" ? body.weeklyTime : "09:00";
     const postsPerAccount = Math.min(200, Math.max(1, Number(body.postsPerAccount || 0)));
+    const testAccountsLimit = Math.min(10, Math.max(0, Number(body.testAccountsLimit || 0)));
     const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
 
     const updated = await updateAppSettings({
@@ -282,6 +292,7 @@ app.post("/api/settings", async (c) => {
       weeklyDay,
       weeklyTime,
       postsPerAccount,
+      testAccountsLimit,
       viralityFormula,
     });
 
