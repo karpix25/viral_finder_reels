@@ -5,8 +5,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "mastra dev",
-    "start": "node --loader tsx ./src/server.ts",
-    "start:once": "node --loader tsx ./run-now.ts",
+    "start": "tsx ./src/server.ts",
+    "start:once": "tsx ./run-now.ts",
     "build": "mastra build",
     "check": "tsc",
     "check:format": "prettier --check '**/*.ts'",
