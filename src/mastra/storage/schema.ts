@@ -1,4 +1,11 @@
-import { pgTable, serial, varchar, timestamp, integer } from "drizzle-orm/pg-core";
+import {
+  pgTable,
+  serial,
+  varchar,
+  timestamp,
+  integer,
+  jsonb,
+} from "drizzle-orm/pg-core";
 
 // Table to track sent viral reels (prevent duplicates)
 export const sentViralReels = pgTable("sent_viral_reels", {
@@ -23,4 +30,12 @@ export const accountCheckHistory = pgTable("account_check_history", {
   lastCheckedAt: timestamp("last_checked_at").defaultNow().notNull(),
   totalChecks: integer("total_checks").notNull().default(1),
   lastViralReelsFound: integer("last_viral_reels_found").notNull().default(0),
+});
+
+// Key-value app settings
+export const appSettings = pgTable("app_settings", {
+  id: serial("id").primaryKey(),
+  key: varchar("key", { length: 100 }).notNull().unique(),
+  value: jsonb("value").notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });

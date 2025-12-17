@@ -1,5 +1,6 @@
 import type { Mastra } from "@mastra/core";
 import { executeInstagramAnalysis } from "../workflows/instagramAnalysisWorkflow";
+import { getAppSettings } from "./settings";
 
 export function startCronScheduler(mastra: Mastra) {
   const logger = mastra.getLogger();
@@ -14,44 +15,71 @@ export function startCronScheduler(mastra: Mastra) {
   });
 
   let isRunning = false;
-  let lastRunHour = -1;
+  let lastRunKey = "";
+
+  const matchesTime = (date: Date, hhmm: string) => {
+    const [hh, mm] = hhmm.split(":").map((n) => parseInt(n, 10));
+    return date.getUTCHours() === hh && date.getUTCMinutes() === mm;
+  };
+
+  const weekKey = (date: Date) => {
+    const firstDay = new Date(Date.UTC(date.getUTCFullYear(), 0, 1));
+    const days = Math.floor(
+      (date.getTime() - firstDay.getTime()) / (24 * 60 * 60 * 1000),
+    );
+    const week = Math.ceil((days + firstDay.getUTCDay() + 1) / 7);
+    return `${date.getUTCFullYear()}-W${week}`;
+  };
 
   // Check every minute if we need to run
   const intervalId = setInterval(async () => {
     const now = new Date();
-    const currentHour = now.getUTCHours();
-    const currentMinute = now.getUTCMinutes();
-    
-    // PRODUCTION MODE: Run at :00 minutes of every hour, only once per hour
-    if (currentMinute === 0 && currentHour !== lastRunHour && !isRunning) {
-      lastRunHour = currentHour;
-      isRunning = true;
-      
-      console.log("⏰ [CronScheduler] HOURLY TRIGGER!", {
-        time: now.toISOString(),
-        hour: currentHour,
-      });
-      logger?.info("🚀 [CronScheduler] Starting Instagram analysis workflow");
-      
-      try {
-        logger?.info("📡 [CronScheduler] Executing workflow logic directly");
-        
-        const result = await executeInstagramAnalysis(mastra);
-        
-        logger?.info("✅ [CronScheduler] Workflow completed successfully", {
-          totalAccountsProcessed: result.totalAccountsProcessed,
-          totalViralReelsSent: result.totalViralReelsSent,
-        });
-      } catch (error: any) {
-        logger?.error("❌ [CronScheduler] Workflow failed", {
-          error: error.message,
-          stack: error.stack,
-        });
-        
-        logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
-      } finally {
-        isRunning = false;
+    const settings = await getAppSettings();
+    const mode = settings.schedulerMode || "daily";
+
+    let shouldRun = false;
+    let runKey = "";
+
+    if (mode === "daily") {
+      if (matchesTime(now, settings.dailyTime || "09:00")) {
+        runKey = now.toISOString().split("T")[0]; // YYYY-MM-DD
+        shouldRun = runKey !== lastRunKey;
       }
+    } else {
+      const targetDay = settings.weeklyDay ?? 1;
+      if (now.getUTCDay() === targetDay && matchesTime(now, settings.weeklyTime || "09:00")) {
+        runKey = `${weekKey(now)}-${targetDay}`;
+        shouldRun = runKey !== lastRunKey;
+      }
+    }
+
+    if (!shouldRun || isRunning) return;
+
+    isRunning = true;
+    lastRunKey = runKey;
+
+    logger?.info("⏰ [CronScheduler] Trigger", {
+      mode,
+      runKey,
+      time: now.toISOString(),
+    });
+    
+    try {
+      const result = await executeInstagramAnalysis(mastra);
+      
+      logger?.info("✅ [CronScheduler] Workflow completed successfully", {
+        totalAccountsProcessed: result.totalAccountsProcessed,
+        totalViralReelsSent: result.totalViralReelsSent,
+      });
+    } catch (error: any) {
+      logger?.error("❌ [CronScheduler] Workflow failed", {
+        error: error.message,
+        stack: error.stack,
+      });
+      
+      logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
+    } finally {
+      isRunning = false;
     }
   }, 60000); // Check every minute
 

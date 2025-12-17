@@ -6,6 +6,7 @@ import { sendSingleViralReelTool } from "../tools/sendSingleViralReelTool";
 import { getAccountPrioritiesTool } from "../tools/getAccountPrioritiesTool";
 import { updateAccountCheckTool } from "../tools/updateAccountCheckTool";
 import { RuntimeContext } from "@mastra/core/di";
+import { getAppSettings } from "../services/settings";
 
 const runtimeContext = new RuntimeContext();
 
@@ -30,6 +31,19 @@ export async function executeInstagramAnalysis(mastra: any) {
   logger?.info("✅ [Step1] ALL accounts read successfully", {
     totalAccounts: accounts.length,
     message: "Will analyze all accounts from first to last row",
+  });
+
+  const appSettings = await getAppSettings();
+  const postsPerAccount = Math.max(1, appSettings.postsPerAccount || 100);
+  const viralityFormula = appSettings.viralityFormula || "current";
+
+  logger?.info("⚙️ [Workflow] Settings loaded", {
+    schedulerMode: appSettings.schedulerMode,
+    dailyTime: appSettings.dailyTime,
+    weeklyDay: appSettings.weeklyDay,
+    weeklyTime: appSettings.weeklyTime,
+    postsPerAccount,
+    viralityFormula,
   });
 
   // Step 1.5: Prioritize accounts by last check time (never checked first, then oldest)
@@ -92,17 +106,22 @@ export async function executeInstagramAnalysis(mastra: any) {
         continue;
       }
 
+      // Limit number of posts per account
+      const reelsToAnalyze = accountData.reels.slice(0, postsPerAccount);
+
       // Calculate average views for this account
-      const totalViews = accountData.reels.reduce(
+      const totalViews = reelsToAnalyze.reduce(
         (sum, reel) => sum + reel.viewCount,
         0,
       );
-      const averageViews = totalViews / accountData.reels.length;
+      const averageViews =
+        reelsToAnalyze.length > 0 ? totalViews / reelsToAnalyze.length : 0;
 
       logger?.info("📊 [Step2] Analyzing reels and carousels for virality", {
         username: accountData.username,
-        totalPosts: accountData.reels.length,
+        totalPosts: reelsToAnalyze.length,
         averageViews,
+        postsPerAccount,
       });
 
       // Determine adaptive criteria based on account size
@@ -186,10 +205,11 @@ export async function executeInstagramAnalysis(mastra: any) {
         carouselsMultiplier: `X${carouselMultiplier}`,
         reelsCriteria: `Views >= ${minimumViewsReel.toLocaleString()}`,
         carouselsCriteria: `Engagement >= ${minimumEngagementCarousel.toLocaleString()} (лайки+комментарии)`,
+        viralityFormula,
       });
 
       // Check each reel
-      for (const reel of accountData.reels) {
+      for (const reel of reelsToAnalyze) {
         const reelDate = new Date(reel.timestamp);
         const now = new Date();
         const ageInDays = Math.floor(
@@ -204,6 +224,7 @@ export async function executeInstagramAnalysis(mastra: any) {
         // Calculate metrics
         const engagement = reel.likeCount + reel.commentCount;
         const isCarousel = reel.type === "Sidecar";
+        const shareCount = (reel as any).shareCount ?? 0;
 
         // NEW VIRALITY CRITERIA
         let isViral = false;
@@ -221,6 +242,17 @@ export async function executeInstagramAnalysis(mastra: any) {
             isViral = true;
             viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViewsReel.toLocaleString()} [Reel]`;
           }
+
+          if (!isViral && viralityFormula === "shares") {
+            const shareThreshold = Math.max(
+              500,
+              Math.round(followersCount * 0.01),
+            );
+            if (shareCount >= shareThreshold) {
+              isViral = true;
+              viralityReason = `Shares: ${shareCount.toLocaleString()} >= ${shareThreshold.toLocaleString()} [Reel]`;
+            }
+          }
         }
 
         if (isViral) {
@@ -232,6 +264,7 @@ export async function executeInstagramAnalysis(mastra: any) {
             viralityReason,
             viewCount: reel.viewCount,
             engagement,
+            shareCount,
             followersCount,
             accountSizeCategory,
           });

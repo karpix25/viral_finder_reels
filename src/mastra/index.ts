@@ -104,8 +104,8 @@ console.log("✅ [Main] Instagram Analyzer project initialized (Autoscale mode)"
 console.log("💡 [Main] This project ONLY handles hourly Instagram analysis");
 console.log("💡 [Main] Account management is handled by separate Telegram Bot project");
 
-// Start hourly cron job ONLY in production (Autoscale deployment)
-if (process.env.NODE_ENV === "production") {
+// Legacy cron scheduler (disabled by default; enable with ENABLE_LEGACY_CRON=1)
+if (process.env.NODE_ENV === "production" && process.env.ENABLE_LEGACY_CRON === "1") {
   const logger = mastra.getLogger();
   
   logger?.info("⏰ [Cron] Starting hourly Instagram analysis scheduler");

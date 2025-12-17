@@ -4,7 +4,7 @@ import { z } from "zod";
 export const scrapeInstagramTool = createTool({
   id: "scrape-instagram-reels",
   description:
-    "Scrapes Instagram account reels and carousel posts data using Apify (gets recent reels/carousels with views count)",
+    "Scrapes Instagram account reels and carousel posts data using RapidAPI (gets recent reels/carousels with views count)",
   inputSchema: z.object({
     accountUrl: z.string().describe("Instagram account URL"),
   }),
@@ -20,6 +20,7 @@ export const scrapeInstagramTool = createTool({
         viewCount: z.number(),
         likeCount: z.number(),
         commentCount: z.number(),
+        shareCount: z.number().optional(),
         timestamp: z.string(),
         url: z.string(),
       }),
@@ -31,182 +32,142 @@ export const scrapeInstagramTool = createTool({
 
     logger?.info("🔧 [ScrapeInstagram] Starting execution", { accountUrl });
 
-    const apifyApiKey = process.env.APIFY_API_KEY;
-    if (!apifyApiKey) {
-      throw new Error("APIFY_API_KEY is not set");
+    const rapidApiKey = process.env.RAPIDAPI_KEY;
+    const rapidApiHost =
+      process.env.RAPIDAPI_HOST || "instagram-social-api.p.rapidapi.com";
+    if (!rapidApiKey) {
+      throw new Error("RAPIDAPI_KEY is not set");
     }
 
     const username = accountUrl.split("/").filter(Boolean).pop() || "";
     logger?.info("📝 [ScrapeInstagram] Extracted username", { username });
 
-    logger?.info("📝 [ScrapeInstagram] Starting Apify actor");
+    logger?.info("📝 [ScrapeInstagram] Fetching via RapidAPI /v1/posts");
 
-    const actorRunResponse = await fetch(
-      "https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apifyApiKey}`,
-        },
-        body: JSON.stringify({
-          usernames: [username],
-          resultsLimit: 100,
-          resultsType: "posts",
-          searchType: "user",
-          searchLimit: 1,
-          addParentData: false,
-        }),
-      },
-    );
+    const reels: any[] = [];
+    let followersCount = 0;
+    let paginationToken: string | undefined;
+    const maxPages = 10; // safety cap
+    let pageCount = 0;
 
-    if (!actorRunResponse.ok) {
-      throw new Error(
-        `Failed to start Apify actor: ${actorRunResponse.statusText}`,
-      );
-    }
+    const headers = {
+      "X-Rapidapi-Key": rapidApiKey,
+      "X-Rapidapi-Host": rapidApiHost,
+    };
 
-    const runData = await actorRunResponse.json();
-    const runId = runData.data.id;
+    const toContentType = (item: any) => {
+      if (item?.media_type === 8) return "Sidecar";
+      if (item?.media_type === 2) {
+        return item?.product_type === "clips" ? "Reel" : "Video";
+      }
+      if (item?.product_type === "clips") return "Reel";
+      if (item?.media_type === 1) return "Image";
+      return "Unknown";
+    };
 
-    logger?.info("📝 [ScrapeInstagram] Waiting for actor to finish", { runId });
+    while (pageCount < maxPages) {
+      pageCount++;
+      const url = new URL(`https://${rapidApiHost}/v1/posts`);
+      url.searchParams.set("username_or_id_or_url", username);
+      if (paginationToken) {
+        url.searchParams.set("pagination_token", paginationToken);
+      }
 
-    let runStatus = "RUNNING";
-    let attempts = 0;
-    const maxAttempts = 60;
+      const response = await fetch(url.toString(), { headers });
 
-    while (runStatus === "RUNNING" && attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-
-      const statusResponse = await fetch(
-        `https://api.apify.com/v2/acts/apify~instagram-profile-scraper/runs/${runId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${apifyApiKey}`,
-          },
-        },
-      );
-
-      const statusData = await statusResponse.json();
-      runStatus = statusData.data.status;
-      attempts++;
-
-      logger?.info("📝 [ScrapeInstagram] Actor status", {
-        runStatus,
-        attempts,
-      });
-    }
-
-    if (runStatus !== "SUCCEEDED") {
-      throw new Error(`Apify actor failed with status: ${runStatus}`);
-    }
-
-    logger?.info("📝 [ScrapeInstagram] Fetching results");
-
-    const resultsResponse = await fetch(
-      `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`,
-      {
-        headers: {
-          Authorization: `Bearer ${apifyApiKey}`,
-        },
-      },
-    );
-
-    const results = await resultsResponse.json();
-
-    logger?.info("📝 [ScrapeInstagram] Raw results structure", {
-      isArray: Array.isArray(results),
-      type: typeof results,
-      keys: Object.keys(results || {}),
-      firstItemType: results?.[0] ? typeof results[0] : "no items",
-      error: results?.error || null,
-    });
-
-    if (results?.error) {
-      logger?.error("❌ [ScrapeInstagram] Apify returned error", {
-        error: results.error,
-        username,
-      });
-      return { username, followersCount: 0, relatedProfiles: [], reels: [] };
-    }
-
-    const resultsArray = Array.isArray(results) ? results : [];
-
-    logger?.info("📝 [ScrapeInstagram] Processing results", {
-      resultsCount: resultsArray.length,
-    });
-
-    if (resultsArray.length > 0) {
-      const firstResult = resultsArray[0];
-      logger?.info("📝 [ScrapeInstagram] First result sample", {
-        keys: Object.keys(firstResult || {}),
-        ownerUsername: firstResult?.ownerUsername,
-        username: firstResult?.username,
-        error: firstResult?.error || null,
-        errorDescription: firstResult?.errorDescription || null,
-        latestPostsCount: firstResult?.latestPosts?.length || 0,
-      });
-
-      if (firstResult?.error) {
-        logger?.error("❌ [ScrapeInstagram] Apify returned account error", {
-          username,
-          error: firstResult.error,
-          errorDescription: firstResult.errorDescription,
+      if (!response.ok) {
+        const errorText = await response.text();
+        logger?.error("❌ [ScrapeInstagram] RapidAPI posts request failed", {
+          status: response.status,
+          error: errorText,
+          pageCount,
         });
-        return { username, followersCount: 0, relatedProfiles: [], reels: [] };
+        throw new Error(`RapidAPI posts request failed: ${response.statusText}`);
+      }
+
+      const json = await response.json();
+      const items = Array.isArray(json?.data?.items) ? json.data.items : [];
+
+      if (items.length === 0) {
+        logger?.info("ℹ️ [ScrapeInstagram] No items on page", { pageCount });
+        break;
+      }
+
+      // Set followers count once if available
+      if (!followersCount) {
+        const firstMetrics = items[0]?.metrics || {};
+        followersCount =
+          firstMetrics.user_follower_count ||
+          items[0]?.owner?.follower_count ||
+          items[0]?.user?.follower_count ||
+          0;
+      }
+
+      if (pageCount === 1) {
+        const sample = items[0];
+        logger?.info("🔍 [ScrapeInstagram] First item sample", {
+          keys: sample ? Object.keys(sample) : [],
+          media_type: sample?.media_type,
+          product_type: sample?.product_type,
+          metricsKeys: sample?.metrics ? Object.keys(sample.metrics) : [],
+        });
+      }
+
+      for (const item of items) {
+        const type = toContentType(item);
+        if (type !== "Reel" && type !== "Sidecar" && type !== "Video") {
+          continue;
+        }
+
+        const metrics = item?.metrics || {};
+        const viewCount =
+          metrics.view_count ??
+          metrics.play_count ??
+          item?.play_count ??
+          item?.video_play_count ??
+          0;
+        const likeCount =
+          metrics.like_count ??
+          item?.like_count ??
+          metrics.fb_like_count ??
+          0;
+        const commentCount =
+          metrics.comment_count ??
+          item?.comment_count ??
+          metrics.fb_aggregated_comment_count ??
+          0;
+        const shareCount =
+          metrics.share_count ??
+          metrics.shareCount ??
+          item?.share_count ??
+          0;
+
+        const timestamp = item?.taken_at
+          ? new Date(item.taken_at * 1000).toISOString()
+          : new Date().toISOString();
+        const code = item?.code || item?.id;
+        const url = code ? `https://www.instagram.com/p/${code}/` : "";
+
+        reels.push({
+          id: String(item?.id || code || reels.length + 1),
+          type,
+          caption: item?.caption?.text || item?.caption || "",
+          viewCount,
+          likeCount,
+          commentCount,
+          shareCount,
+          timestamp,
+          url,
+        });
+      }
+
+      paginationToken = json?.pagination_token;
+      if (!paginationToken || reels.length >= 120) {
+        break;
       }
     }
 
-    const allPosts = resultsArray.flatMap((item: any) => item.latestPosts || []);
-
-    logger?.info("📝 [ScrapeInstagram] Extracted posts from latestPosts", {
-      totalPosts: allPosts.length,
-    });
-
-    const filteredReels = allPosts.filter(
-      (item: any) => item.type === "Video" || item.type === "Reel" || item.type === "Sidecar",
-    );
-
-    // Log first reel details for debugging
-    if (filteredReels.length > 0) {
-      const firstReel = filteredReels[0];
-      logger?.info("🔍 [ScrapeInstagram] First reel raw data sample", {
-        url: firstReel.url,
-        keys: Object.keys(firstReel),
-        videoViewCount: firstReel.videoViewCount,
-        playCount: firstReel.playCount,
-        viewCount: firstReel.viewCount,
-        videoPlayCount: firstReel.videoPlayCount,
-        likesCount: firstReel.likesCount,
-        commentsCount: firstReel.commentsCount,
-      });
-    }
-
-    const reels = filteredReels
-      .map((item: any) => ({
-        id: item.id,
-        type: item.type, // "Reel", "Video", or "Sidecar" (carousel)
-        caption: item.caption || "",
-        viewCount: item.videoViewCount || item.playCount || 0,
-        likeCount: item.likesCount || 0,
-        commentCount: item.commentsCount || 0,
-        timestamp: item.timestamp,
-        url: item.url,
-      }))
-      .slice(0, 100);
-
-    // Extract followers count and related profiles from first result
-    const followersCount = resultsArray[0]?.followersCount || 0;
-    const relatedProfilesRaw = resultsArray[0]?.relatedProfiles || [];
-    
-    // Extract usernames from related profiles (they can be objects or strings)
-    const relatedProfiles = relatedProfilesRaw
-      .map((profile: any) => {
-        if (typeof profile === 'string') return profile;
-        return profile?.username || profile?.name || null;
-      })
-      .filter((name: string | null) => name !== null && name.length > 0)
-      .slice(0, 10); // Limit to 10 related profiles per account
+    const relatedProfiles: string[] = [];
 
     logger?.info("✅ [ScrapeInstagram] Completed successfully", {
       username,
@@ -215,11 +176,13 @@ export const scrapeInstagramTool = createTool({
       relatedProfilesCount: relatedProfiles.length,
     });
 
+    const limitedReels = reels.slice(0, 100);
+
     return {
       username,
       followersCount,
       relatedProfiles,
-      reels,
+      reels: limitedReels,
     };
   },
 });

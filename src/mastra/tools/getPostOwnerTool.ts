@@ -3,7 +3,7 @@ import { z } from "zod";
 
 export const getPostOwnerTool = createTool({
   id: "get-instagram-post-owner",
-  description: "Gets the owner username from an Instagram post URL using Apify",
+  description: "Gets the owner username from an Instagram post URL using RapidAPI",
   inputSchema: z.object({
     postUrl: z.string().describe("Instagram post or reel URL"),
   }),
@@ -16,146 +16,57 @@ export const getPostOwnerTool = createTool({
 
     logger?.info("🔧 [GetPostOwner] Starting execution", { postUrl });
 
-    const apifyApiKey = process.env.APIFY_API_KEY;
-    if (!apifyApiKey) {
-      throw new Error("APIFY_API_KEY is not set");
+    const rapidApiKey = process.env.RAPIDAPI_KEY;
+    const rapidApiHost =
+      process.env.RAPIDAPI_HOST || "instagram-social-api.p.rapidapi.com";
+    if (!rapidApiKey) {
+      throw new Error("RAPIDAPI_KEY is not set");
     }
 
-    logger?.info("📝 [GetPostOwner] Starting Apify actor with directUrls");
+    logger?.info("📝 [GetPostOwner] Fetching via RapidAPI /v1/post_info");
 
-    // Use instagram-scraper actor which supports directUrls
-    const actorRunResponse = await fetch(
-      "https://api.apify.com/v2/acts/apify~instagram-scraper/runs",
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apifyApiKey}`,
-        },
-        body: JSON.stringify({
-          directUrls: [postUrl],
-          resultsLimit: 1,
-          resultsType: "posts",
-        }),
+    const url = `https://${rapidApiHost}/v1/post_info?code_or_id_or_url=${encodeURIComponent(postUrl)}`;
+    const response = await fetch(url, {
+      headers: {
+        "X-Rapidapi-Key": rapidApiKey,
+        "X-Rapidapi-Host": rapidApiHost,
       },
-    );
+    });
 
-    if (!actorRunResponse.ok) {
-      const errorText = await actorRunResponse.text();
-      logger?.error("❌ [GetPostOwner] Failed to start Apify actor", {
-        status: actorRunResponse.status,
+    if (!response.ok) {
+      const errorText = await response.text();
+      logger?.error("❌ [GetPostOwner] RapidAPI post_info failed", {
+        status: response.status,
         error: errorText,
       });
-      throw new Error(
-        `Failed to start Apify actor: ${actorRunResponse.statusText}`,
-      );
+      throw new Error(`RapidAPI post_info failed: ${response.statusText}`);
     }
 
-    const runData = await actorRunResponse.json();
-    const runId = runData.data.id;
+    const json = await response.json();
+    const postData = json?.data;
 
-    logger?.info("📝 [GetPostOwner] Waiting for actor to finish", { runId });
-
-    let runStatus = "RUNNING";
-    let attempts = 0;
-    const maxAttempts = 30;
-
-    while (runStatus === "RUNNING" && attempts < maxAttempts) {
-      await new Promise((resolve) => setTimeout(resolve, 3000));
-
-      const statusResponse = await fetch(
-        `https://api.apify.com/v2/acts/apify~instagram-scraper/runs/${runId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${apifyApiKey}`,
-          },
-        },
-      );
-
-      const statusData = await statusResponse.json();
-      runStatus = statusData.data.status;
-      attempts++;
-
-      logger?.info("📝 [GetPostOwner] Actor status", {
-        runStatus,
-        attempts,
-      });
-    }
-
-    if (runStatus !== "SUCCEEDED") {
-      throw new Error(`Apify actor failed with status: ${runStatus}`);
-    }
-
-    logger?.info("📝 [GetPostOwner] Fetching results");
-
-    const resultsResponse = await fetch(
-      `https://api.apify.com/v2/actor-runs/${runId}/dataset/items`,
-      {
-        headers: {
-          Authorization: `Bearer ${apifyApiKey}`,
-        },
-      },
-    );
-
-    const results = await resultsResponse.json();
-
-    logger?.info("📝 [GetPostOwner] Raw results", {
-      isArray: Array.isArray(results),
-      count: results?.length || 0,
-      firstItem: results?.[0] || null,
-    });
-
-    if (!results || results.length === 0) {
-      logger?.error("❌ [GetPostOwner] No results returned from Apify", {
-        url: postUrl,
-        resultsLength: results?.length,
-      });
-      throw new Error(`No results returned from Apify for URL: ${postUrl}`);
-    }
-
-    const postData = results[0];
-    
-    // Log the full post data for debugging
     logger?.info("📝 [GetPostOwner] Post data received", {
-      url: postUrl,
-      hasError: !!postData.error,
-      error: postData.error,
-      errorDescription: postData.errorDescription,
-      availableFields: Object.keys(postData),
+      hasError: !!postData?.error,
+      availableFields: postData ? Object.keys(postData) : [],
     });
-    
-    // Check for restricted access error
-    if (postData.error === "restricted_page") {
-      logger?.error("❌ [GetPostOwner] Restricted access to post", {
-        url: postUrl,
-        errorDescription: postData.errorDescription,
-      });
-      throw new Error(`Restricted access - post is private or has limited access: ${postUrl}`);
+
+    if (!postData) {
+      throw new Error("RapidAPI post_info returned no data");
     }
-    
-    // Check for other errors
+
     if (postData.error) {
-      logger?.error("❌ [GetPostOwner] Apify returned error", {
+      logger?.error("❌ [GetPostOwner] RapidAPI returned error", {
         url: postUrl,
         error: postData.error,
-        errorDescription: postData.errorDescription,
       });
-      throw new Error(`Apify error for ${postUrl}: ${postData.error}`);
+      throw new Error(`RapidAPI error for ${postUrl}: ${postData.error}`);
     }
-    
-    // The response should have ownerUsername at the top level or nested
-    // Check different possible fields
-    let username = 
-      postData.ownerUsername || 
-      postData.owner?.username ||
-      postData.username ||
-      postData.ownerFullName;
 
-    // If still no username, try to extract from latestPosts
-    if (!username && postData.latestPosts && postData.latestPosts.length > 0) {
-      const firstPost = postData.latestPosts[0];
-      username = firstPost.ownerUsername || firstPost.owner?.username;
-    }
+    const username =
+      postData.owner?.username ||
+      postData.user?.username ||
+      postData.caption?.user?.username ||
+      null;
 
     if (!username) {
       logger?.error("❌ [GetPostOwner] Could not find username in results", {
