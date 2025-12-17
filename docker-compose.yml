@@ -4,6 +4,12 @@ services:
     environment:
       DATABASE_URL: ${DATABASE_URL:-postgres://postgres:postgres@db:5432/mastra}
       RAPIDAPI_HOST: ${RAPIDAPI_HOST:-instagram-social-api.p.rapidapi.com}
+      RAPIDAPI_KEY: ${RAPIDAPI_KEY}
+      TELEGRAM_BOT_TOKEN: ${TELEGRAM_BOT_TOKEN}
+      TELEGRAM_CHAT_ID: ${TELEGRAM_CHAT_ID}
+      TELEGRAM_ACCOUNTS_CHAT_ID: ${TELEGRAM_ACCOUNTS_CHAT_ID}
+      TELEGRAM_ACCOUNTS_THREAD_ID: ${TELEGRAM_ACCOUNTS_THREAD_ID}
+      PORT: ${PORT:-3000}
     expose:
       - "3000"
     depends_on:
