@@ -8,6 +8,7 @@ import {
   updateAppSettings,
 } from "./mastra/services/settings.js";
 import { executeInstagramAnalysis } from "./mastra/workflows/instagramAnalysisWorkflow.js";
+import { seedInstagramAccountsFromFile } from "./mastra/services/accounts.js";
 
 const app = new Hono();
 
@@ -350,9 +351,9 @@ app.post("/api/test-run", async (c) => {
   }
 });
 
-ensureAppSettingsTable()
+Promise.all([ensureAppSettingsTable(), seedInstagramAccountsFromFile()])
   .catch((err) => {
-    console.error("Failed to ensure app_settings table", err);
+    console.error("Failed to run startup tasks", err);
   })
   .finally(() => {
     startCronScheduler(mastra);
