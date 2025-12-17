@@ -1,8 +1,24 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { asc, sql } from "drizzle-orm";
-import { db } from "../storage/index.js";
+import { db, pool } from "../storage/index.js";
 import { accountCheckHistory } from "../storage/schema.js";
+
+let ensuredHistory = false;
+async function ensureAccountCheckHistoryTable() {
+  if (ensuredHistory) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS account_check_history (
+      id SERIAL PRIMARY KEY,
+      username VARCHAR(255) UNIQUE NOT NULL,
+      last_checked_at TIMESTAMP DEFAULT now() NOT NULL,
+      total_checks INTEGER NOT NULL DEFAULT 1,
+      last_viral_reels_found INTEGER NOT NULL DEFAULT 0
+    );
+  `);
+  ensuredHistory = true;
+  console.log("✅ [DB] account_check_history ensured");
+}
 
 export const getAccountPrioritiesTool = createTool({
   id: "getAccountPriorities",
@@ -24,6 +40,7 @@ export const getAccountPrioritiesTool = createTool({
     });
     
     try {
+      await ensureAccountCheckHistoryTable();
       // Get all check history, ordered by oldest checks first
       const checkHistory = await db
         .select()
