@@ -34,8 +34,10 @@ export async function ensureAppSettingsTable() {
         updated_at TIMESTAMP DEFAULT now() NOT NULL
       );
     `);
+    console.log("✅ [DB] app_settings ensured");
     ensured = true;
   } catch (error) {
+    console.error("❌ [DB] Failed to ensure app_settings", error);
     ensured = false;
     throw error;
   }

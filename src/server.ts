@@ -2,7 +2,11 @@ import { Hono } from "hono";
 import { serve } from "@hono/node-server";
 import { mastra } from "./mastra/index.js";
 import { startCronScheduler } from "./mastra/services/cronScheduler.js";
-import { ensureAppSettingsTable, getAppSettings, updateAppSettings } from "./mastra/services/settings.js";
+import {
+  ensureAppSettingsTable,
+  getAppSettings,
+  updateAppSettings,
+} from "./mastra/services/settings.js";
 
 const app = new Hono();
 
@@ -248,7 +252,9 @@ app.get("/", (c) => c.html(html));
 
 app.get("/api/settings", async (c) => {
   try {
+    console.log("🔎 [API] GET /api/settings");
     const settings = await getAppSettings();
+    console.log("🔎 [API] GET /api/settings ->", settings);
     return c.json(settings);
   } catch (err: any) {
     console.error("Failed to read settings", err);
@@ -259,6 +265,7 @@ app.get("/api/settings", async (c) => {
 app.post("/api/settings", async (c) => {
   try {
     const body = await c.req.json();
+    console.log("💾 [API] POST /api/settings payload", body);
     const schedulerMode =
       body.schedulerMode === "weekly" ? "weekly" : "daily";
     const dailyTime = typeof body.dailyTime === "string" ? body.dailyTime : "09:00";
@@ -278,6 +285,7 @@ app.post("/api/settings", async (c) => {
       viralityFormula,
     });
 
+    console.log("💾 [API] POST /api/settings saved", updated);
     return c.json(updated);
   } catch (err: any) {
     console.error("Failed to save settings", err);
@@ -285,13 +293,13 @@ app.post("/api/settings", async (c) => {
   }
 });
 
-startCronScheduler(mastra);
-
 ensureAppSettingsTable()
   .catch((err) => {
     console.error("Failed to ensure app_settings table", err);
   })
   .finally(() => {
+    startCronScheduler(mastra);
+    console.log("⏰ [Scheduler] Started after ensuring settings table");
     serve(
       {
         fetch: app.fetch,
