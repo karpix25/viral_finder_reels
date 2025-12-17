@@ -43,14 +43,6 @@ export const scrapeInstagramTool = createTool({
     const username = accountUrl.split("/").filter(Boolean).pop() || "";
     logger?.info("📝 [ScrapeInstagram] Extracted username", { username });
 
-    logger?.info("📝 [ScrapeInstagram] Fetching via RapidAPI /v1/posts");
-
-    const reels: any[] = [];
-    let followersCount = await fetchFollowersCount();
-    let paginationToken: string | undefined;
-    const maxPages = 10; // safety cap
-    let pageCount = 0;
-
     const headers = {
       "X-Rapidapi-Key": rapidApiKey,
       "X-Rapidapi-Host": rapidApiHost,
@@ -83,6 +75,14 @@ export const scrapeInstagramTool = createTool({
         return 0;
       }
     };
+
+    logger?.info("📝 [ScrapeInstagram] Fetching via RapidAPI /v1/posts");
+
+    const reels: any[] = [];
+    let followersCount = await fetchFollowersCount();
+    let paginationToken: string | undefined;
+    const maxPages = 10; // safety cap
+    let pageCount = 0;
 
     const toContentType = (item: any) => {
       if (item?.media_type === 8) return "Sidecar";
