@@ -1,9 +1,24 @@
 import { createTool } from "@mastra/core/tools";
 import { z } from "zod";
 import { Telegraf } from "telegraf";
-import { db } from "../storage";
+import { db, pool } from "../storage";
 import { sentViralReels } from "../storage/schema";
 import { eq } from "drizzle-orm";
+
+let ensuredSent = false;
+async function ensureSentViralReelsTable() {
+  if (ensuredSent) return;
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS sent_viral_reels (
+      id SERIAL PRIMARY KEY,
+      reel_url VARCHAR(500) UNIQUE NOT NULL,
+      username VARCHAR(255) NOT NULL,
+      sent_at TIMESTAMP DEFAULT now() NOT NULL
+    );
+  `);
+  ensuredSent = true;
+  console.log("✅ [DB] sent_viral_reels ensured");
+}
 
 export const sendSingleViralReelTool = createTool({
   id: "send-single-viral-reel",
@@ -45,6 +60,8 @@ export const sendSingleViralReelTool = createTool({
       username,
       reelUrl,
     });
+
+    await ensureSentViralReelsTable();
 
     // Check if reel was already sent
     const existingReel = await db
