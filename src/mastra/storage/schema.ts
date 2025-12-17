@@ -12,6 +12,7 @@ export const instagramAccounts = pgTable("instagram_accounts", {
   id: serial("id").primaryKey(),
   username: varchar("username", { length: 255 }).notNull().unique(),
   createdAt: timestamp("created_at").defaultNow().notNull(),
+  followers: integer("followers").default(0).notNull(),
 });
 
 // Table to track sent viral reels (prevent duplicates)

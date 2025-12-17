@@ -13,8 +13,14 @@ export async function ensureInstagramAccountsTable() {
     CREATE TABLE IF NOT EXISTS instagram_accounts (
       id SERIAL PRIMARY KEY,
       username VARCHAR(255) UNIQUE NOT NULL,
-      created_at TIMESTAMP DEFAULT now() NOT NULL
+      created_at TIMESTAMP DEFAULT now() NOT NULL,
+      followers INTEGER DEFAULT 0 NOT NULL
     );
+  `);
+  // Ensure followers column exists on old deployments
+  await pool.query(`
+    ALTER TABLE instagram_accounts
+    ADD COLUMN IF NOT EXISTS followers INTEGER DEFAULT 0 NOT NULL;
   `);
   ensured = true;
   console.log("✅ [DB] instagram_accounts ensured");
@@ -55,6 +61,23 @@ export async function addInstagramAccount(username: string) {
     added: true,
     message: `Account @${cleaned} added`,
   };
+}
+
+export async function upsertFollowers(username: string, followers: number) {
+  await ensureInstagramAccountsTable();
+  const cleaned = username.trim();
+  if (!cleaned) return;
+  const safeFollowers = Math.max(0, Math.floor(followers || 0));
+
+  await db
+    .insert(instagramAccounts)
+    .values({ username: cleaned, followers: safeFollowers })
+    .onConflictDoUpdate({
+      target: instagramAccounts.username,
+      set: {
+        followers: safeFollowers,
+      },
+    });
 }
 
 export async function seedInstagramAccountsFromFile(
