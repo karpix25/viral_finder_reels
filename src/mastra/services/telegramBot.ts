@@ -257,10 +257,20 @@ export async function startTelegramBot(mastra: Mastra) {
                   threadId: notificationThreadId || "основной чат",
                   attempt,
                 });
-                
-                await bot.telegram.sendMessage(notificationChatId, responseMessage.trim(), {
-                  message_thread_id: notificationThreadId ? parseInt(notificationThreadId) : undefined,
-                });
+                await bot.telegram.sendMessage(
+                  notificationChatId,
+                  responseMessage.trim(),
+                  {
+                    message_thread_id: notificationThreadId
+                      ? parseInt(notificationThreadId)
+                      : undefined,
+                    // Если отправляем в тот же чат и нет thread, ответим реплаем на исходное сообщение
+                    reply_parameters:
+                      notificationChatId === chatId.toString() && !notificationThreadId
+                        ? { message_id: message.message_id }
+                        : undefined,
+                  },
+                );
                 
                 logger?.info("✅ [TelegramBot] Notification sent successfully", {
                   attempt,
