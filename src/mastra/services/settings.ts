@@ -1,6 +1,7 @@
 import { db } from "../storage";
 import { appSettings } from "../storage/schema";
 import { eq } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 
 export type AppSettings = {
   schedulerMode: "daily" | "weekly";
@@ -22,8 +23,23 @@ const DEFAULT_SETTINGS: AppSettings = {
 
 const SETTINGS_KEY = "default";
 
+let ensured = false;
+async function ensureAppSettingsTable() {
+  if (ensured) return;
+  await db.execute(sql`
+    CREATE TABLE IF NOT EXISTS app_settings (
+      id SERIAL PRIMARY KEY,
+      key VARCHAR(100) UNIQUE NOT NULL,
+      value JSONB NOT NULL,
+      updated_at TIMESTAMP DEFAULT now() NOT NULL
+    );
+  `);
+  ensured = true;
+}
+
 export async function getAppSettings(): Promise<AppSettings> {
   try {
+    await ensureAppSettingsTable();
     const rows = await db
       .select()
       .from(appSettings)
@@ -49,6 +65,7 @@ export async function getAppSettings(): Promise<AppSettings> {
 }
 
 export async function updateAppSettings(payload: Partial<AppSettings>): Promise<AppSettings> {
+  await ensureAppSettingsTable();
   const current = await getAppSettings();
   const next: AppSettings = {
     schedulerMode: payload.schedulerMode ?? current.schedulerMode,
