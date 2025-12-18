@@ -2,6 +2,17 @@ import { db, pool } from "../storage";
 import { appSettings } from "../storage/schema";
 import { eq } from "drizzle-orm";
 
+export type ViralityMultipliers = {
+  tier1_1k_5k: number;
+  tier2_5k_10k: number;
+  tier3_10k_20k: number;
+  tier4_20k_50k: number;
+  tier5_50k_100k: number;
+  tier6_100k_200k: number;
+  tier7_200k_500k: number;
+  tier8_500k_plus: number;
+};
+
 export type AppSettings = {
   schedulerMode: "daily" | "weekly";
   dailyTime: string; // HH:MM (UTC)
@@ -11,6 +22,18 @@ export type AppSettings = {
   viralityFormula: "current" | "shares";
   testAccountsLimit: number; // 0 = all, >0 limit accounts per run
   followersUpdateFreqDays: number; // how often to update followers (in days)
+  viralityMultipliers: ViralityMultipliers;
+};
+
+const DEFAULT_MULTIPLIERS: ViralityMultipliers = {
+  tier1_1k_5k: 100,
+  tier2_5k_10k: 50,
+  tier3_10k_20k: 30,
+  tier4_20k_50k: 15,
+  tier5_50k_100k: 8,
+  tier6_100k_200k: 5,
+  tier7_200k_500k: 2.5,
+  tier8_500k_plus: 1.5,
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -22,6 +45,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   viralityFormula: "current",
   testAccountsLimit: 0,
   followersUpdateFreqDays: 4,
+  viralityMultipliers: DEFAULT_MULTIPLIERS,
 };
 
 const SETTINGS_KEY = "default";
@@ -59,6 +83,11 @@ export async function getAppSettings(): Promise<AppSettings> {
   const schedulerMode =
     value.schedulerMode === "weekly" ? "weekly" : "daily";
 
+  const mergedMultipliers = {
+    ...DEFAULT_MULTIPLIERS,
+    ...(value.viralityMultipliers || {}),
+  };
+
   return {
     schedulerMode,
     dailyTime: value.dailyTime ?? DEFAULT_SETTINGS.dailyTime,
@@ -69,12 +98,20 @@ export async function getAppSettings(): Promise<AppSettings> {
       DEFAULT_SETTINGS.viralityFormula,
     testAccountsLimit: value.testAccountsLimit ?? DEFAULT_SETTINGS.testAccountsLimit,
     followersUpdateFreqDays: value.followersUpdateFreqDays ?? DEFAULT_SETTINGS.followersUpdateFreqDays,
+    viralityMultipliers: mergedMultipliers,
   };
 }
 
 export async function updateAppSettings(payload: Partial<AppSettings>): Promise<AppSettings> {
   await ensureAppSettingsTable();
   const current = await getAppSettings();
+
+  // Merge multipliers if provided partially
+  const nextMultipliers = {
+    ...current.viralityMultipliers,
+    ...(payload.viralityMultipliers || {}),
+  };
+
   const next: AppSettings = {
     schedulerMode: payload.schedulerMode ?? current.schedulerMode,
     dailyTime: payload.dailyTime ?? current.dailyTime,
@@ -85,6 +122,7 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     testAccountsLimit:
       payload.testAccountsLimit ?? current.testAccountsLimit ?? 0,
     followersUpdateFreqDays: payload.followersUpdateFreqDays ?? current.followersUpdateFreqDays,
+    viralityMultipliers: nextMultipliers,
   };
 
   await db

@@ -147,32 +147,32 @@ export async function executeInstagramAnalysis(mastra: any) {
       // MINIMUM: 100K views for any reel
       // TARGET: 1K followers → 100K+ views, 1M followers → 2M+ views
 
-      // Calculate progressive multiplier with smooth gradation
-      // TARGET: 1K followers → 100K views, 1M+ followers → 2M views
-      // IMPORTANT: Multiplier decreases as followers increase, ensuring monotonic growth
+      // Calculate progressive multiplier using settings
+      const m = appSettings.viralityMultipliers;
+
       if (followersCount < 5000) {
-        viewsMultiplier = 100; // 1K-5K: 1K×100=100K
+        viewsMultiplier = m.tier1_1k_5k; // 1K-5K
         accountSizeCategory = "Микро (1K-5K)";
       } else if (followersCount < 10000) {
-        viewsMultiplier = 50; // 5K-10K: 10K×50=500K
+        viewsMultiplier = m.tier2_5k_10k; // 5K-10K
         accountSizeCategory = "Микро (5K-10K)";
       } else if (followersCount < 20000) {
-        viewsMultiplier = 30; // 10K-20K: 20K×30=600K
+        viewsMultiplier = m.tier3_10k_20k; // 10K-20K
         accountSizeCategory = "Микро (10K-20K)";
       } else if (followersCount < 50000) {
-        viewsMultiplier = 15; // 20K-50K: 50K×15=750K
+        viewsMultiplier = m.tier4_20k_50k; // 20K-50K
         accountSizeCategory = "Малый (20K-50K)";
       } else if (followersCount < 100000) {
-        viewsMultiplier = 8; // 50K-100K: 100K×8=800K
+        viewsMultiplier = m.tier5_50k_100k; // 50K-100K
         accountSizeCategory = "Малый (50K-100K)";
       } else if (followersCount < 200000) {
-        viewsMultiplier = 5; // 100K-200K: 200K×5=1M
+        viewsMultiplier = m.tier6_100k_200k; // 100K-200K
         accountSizeCategory = "Средний (100K-200K)";
       } else if (followersCount < 500000) {
-        viewsMultiplier = 2.5; // 200K-500K: 500K×2.5=1.25M
+        viewsMultiplier = m.tier7_200k_500k; // 200K-500K
         accountSizeCategory = "Средний (200K-500K)";
       } else {
-        viewsMultiplier = 1.5; // 500K+: Множитель X1.5 для всех больших аккаунтов
+        viewsMultiplier = m.tier8_500k_plus; // 500K+
         accountSizeCategory = followersCount >= 1000000 ? "Мега (1M+)" : "Большой (500K-1M)";
       }
 

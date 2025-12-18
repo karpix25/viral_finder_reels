@@ -216,6 +216,45 @@ const html = `<!doctype html>
         <div class="muted">Как часто обновлять кол-во подписчиков (в днях). Например: 4</div>
       </div>
     </div>
+    
+    <h2 style="margin-top: 32px; font-size: 18px;">Коэффициенты виральности (Множители)</h2>
+    <div class="muted" style="margin-bottom: 16px;">Порог просмотров = Подписчики * Множитель. Чем меньше число, тем легче попасть в "вирусное".</div>
+    
+    <div class="grid">
+      <div class="card">
+        <label for="tier1">1K - 5K</label>
+        <input type="number" id="tier1" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier2">5K - 10K</label>
+        <input type="number" id="tier2" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier3">10K - 20K</label>
+        <input type="number" id="tier3" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier4">20K - 50K</label>
+        <input type="number" id="tier4" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier5">50K - 100K</label>
+        <input type="number" id="tier5" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier6">100K - 200K</label>
+        <input type="number" id="tier6" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier7">200K - 500K</label>
+        <input type="number" id="tier7" step="0.1" />
+      </div>
+      <div class="card">
+        <label for="tier8">500K+</label>
+        <input type="number" id="tier8" step="0.1" />
+      </div>
+    </div>
+
     <div class="actions">
       <button id="save">Сохранить</button>
       <button id="test-run" class="btn-secondary">Тест: Парсинг контента</button>
@@ -234,6 +273,16 @@ const html = `<!doctype html>
     const testAccountsInput = document.getElementById('testAccountsLimit');
     const formulaSelect = document.getElementById('viralityFormula');
     const followersFreqInput = document.getElementById('followersFreq');
+    
+    // Multiplier inputs
+    const t1 = document.getElementById('tier1');
+    const t2 = document.getElementById('tier2');
+    const t3 = document.getElementById('tier3');
+    const t4 = document.getElementById('tier4');
+    const t5 = document.getElementById('tier5');
+    const t6 = document.getElementById('tier6');
+    const t7 = document.getElementById('tier7');
+    const t8 = document.getElementById('tier8');
 
     async function loadSettings() {
       statusEl.textContent = 'Загружаю...';
@@ -247,6 +296,17 @@ const html = `<!doctype html>
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       followersFreqInput.value = data.followersUpdateFreqDays ?? 4;
+      
+      const m = data.viralityMultipliers || {};
+      t1.value = m.tier1_1k_5k ?? 100;
+      t2.value = m.tier2_5k_10k ?? 50;
+      t3.value = m.tier3_10k_20k ?? 30;
+      t4.value = m.tier4_20k_50k ?? 15;
+      t5.value = m.tier5_50k_100k ?? 8;
+      t6.value = m.tier6_100k_200k ?? 5;
+      t7.value = m.tier7_200k_500k ?? 2.5;
+      t8.value = m.tier8_500k_plus ?? 1.5;
+
       statusEl.textContent = 'Готово';
     }
 
@@ -261,6 +321,16 @@ const html = `<!doctype html>
         testAccountsLimit: Number(testAccountsInput.value),
         viralityFormula: formulaSelect.value,
         followersUpdateFreqDays: Number(followersFreqInput.value),
+        viralityMultipliers: {
+            tier1_1k_5k: Number(t1.value),
+            tier2_5k_10k: Number(t2.value),
+            tier3_10k_20k: Number(t3.value),
+            tier4_20k_50k: Number(t4.value),
+            tier5_50k_100k: Number(t5.value),
+            tier6_100k_200k: Number(t6.value),
+            tier7_200k_500k: Number(t7.value),
+            tier8_500k_plus: Number(t8.value),
+        }
       };
       const res = await fetch('/api/settings', {
         method: 'POST',
@@ -273,6 +343,7 @@ const html = `<!doctype html>
         return;
       }
       const data = await res.json();
+      // Reload UI values just in case
       modeSelect.value = data.schedulerMode;
       dailyInput.value = data.dailyTime;
       weeklyDaySelect.value = String(data.weeklyDay);
@@ -281,6 +352,17 @@ const html = `<!doctype html>
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       followersFreqInput.value = data.followersUpdateFreqDays;
+      
+      const m = data.viralityMultipliers || {};
+      t1.value = m.tier1_1k_5k;
+      t2.value = m.tier2_5k_10k;
+      t3.value = m.tier3_10k_20k;
+      t4.value = m.tier4_20k_50k;
+      t5.value = m.tier5_50k_100k;
+      t6.value = m.tier6_100k_200k;
+      t7.value = m.tier7_200k_500k;
+      t8.value = m.tier8_500k_plus;
+
       statusEl.textContent = 'Сохранено';
     }
 
@@ -349,6 +431,8 @@ app.post("/api/settings", async (c) => {
     const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
     const followersUpdateFreqDays = Math.max(1, Number(body.followersUpdateFreqDays || 4));
 
+    const viralityMultipliers = body.viralityMultipliers || {};
+
     const updated = await updateAppSettings({
       schedulerMode,
       dailyTime,
@@ -358,6 +442,7 @@ app.post("/api/settings", async (c) => {
       testAccountsLimit,
       viralityFormula,
       followersUpdateFreqDays,
+      viralityMultipliers,
     });
 
     console.log("💾 [API] POST /api/settings saved", updated);
