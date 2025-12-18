@@ -683,7 +683,7 @@ app.post("/api/settings", async (c) => {
 
 app.get("/api/feed", async (c) => {
   try {
-    const { getViralPosts } = await import("./mastra/services/viralPosts");
+    const { getViralPosts } = await import("./mastra/services/viralPosts.js");
     const posts = await getViralPosts(100, 0);
     return c.json(posts);
   } catch (err: any) {
