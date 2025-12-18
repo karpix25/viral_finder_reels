@@ -8,6 +8,7 @@ import {
   updateAppSettings,
 } from "./mastra/services/settings.js";
 import { executeInstagramAnalysis } from "./mastra/workflows/instagramAnalysisWorkflow.js";
+import { executeFollowerUpdate } from "./mastra/workflows/updateFollowersWorkflow.js";
 import { seedInstagramAccountsFromFile } from "./mastra/services/accounts.js";
 import { startTelegramBot } from "./mastra/services/telegramBot.js";
 
@@ -134,6 +135,12 @@ const html = `<!doctype html>
       color: #111827;
       box-shadow: none;
     }
+    .btn-warning {
+      background: #fff7ed;
+      color: #c2410c;
+      border: 1px solid #fed7aa;
+      box-shadow: none;
+    }
     .header-actions {
       display: flex;
       gap: 10px;
@@ -155,12 +162,12 @@ const html = `<!doctype html>
     </header>
     <div class="grid">
       <div class="card">
-        <label for="mode">Частота</label>
+        <label for="mode">Частота (Сбор контента)</label>
         <select id="mode">
           <option value="daily">Каждый день</option>
           <option value="weekly">Каждую неделю</option>
         </select>
-        <div class="muted">Выберите режим расписания</div>
+        <div class="muted">Режим запуска парсинга рилс/каруселей</div>
       </div>
       <div class="card">
         <label for="dailyTime">Время (UTC)</label>
@@ -203,10 +210,16 @@ const html = `<!doctype html>
         </select>
         <div class="muted">Shares: пост считается вирусным, если шаров ≥ 1% фолловеров или 500+</div>
       </div>
+      <div class="card">
+        <label for="followersFreq">Обновление подписчиков (дни)</label>
+        <input type="number" id="followersFreq" min="1" max="30" />
+        <div class="muted">Как часто обновлять кол-во подписчиков (в днях). Например: 4</div>
+      </div>
     </div>
     <div class="actions">
       <button id="save">Сохранить</button>
-      <button id="test-run" class="btn-secondary">Тестовый запуск</button>
+      <button id="test-run" class="btn-secondary">Тест: Парсинг контента</button>
+      <button id="test-followers-update" class="btn-warning">Тест: Обновить подписчиков</button>
       <span class="status" id="status"></span>
     </div>
   </div>
@@ -220,6 +233,7 @@ const html = `<!doctype html>
     const postsInput = document.getElementById('postsPerAccount');
     const testAccountsInput = document.getElementById('testAccountsLimit');
     const formulaSelect = document.getElementById('viralityFormula');
+    const followersFreqInput = document.getElementById('followersFreq');
 
     async function loadSettings() {
       statusEl.textContent = 'Загружаю...';
@@ -232,6 +246,7 @@ const html = `<!doctype html>
       postsInput.value = data.postsPerAccount;
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
+      followersFreqInput.value = data.followersUpdateFreqDays ?? 4;
       statusEl.textContent = 'Готово';
     }
 
@@ -245,6 +260,7 @@ const html = `<!doctype html>
         postsPerAccount: Number(postsInput.value),
         testAccountsLimit: Number(testAccountsInput.value),
         viralityFormula: formulaSelect.value,
+        followersUpdateFreqDays: Number(followersFreqInput.value),
       };
       const res = await fetch('/api/settings', {
         method: 'POST',
@@ -264,17 +280,31 @@ const html = `<!doctype html>
       postsInput.value = data.postsPerAccount;
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
+      followersFreqInput.value = data.followersUpdateFreqDays;
       statusEl.textContent = 'Сохранено';
     }
 
     async function runTest() {
-      statusEl.textContent = 'Тестовый запуск...';
+      statusEl.textContent = 'Тестовый запуск контента...';
       const res = await fetch('/api/test-run', { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
-        statusEl.textContent = 'Запущено: ' + JSON.stringify(data);
+        statusEl.textContent = 'Парсинг запущен: ' + JSON.stringify(data);
       } else {
         statusEl.textContent = 'Ошибка тестового запуска: ' + (data.error || res.status);
+      }
+    }
+
+    async function runFollowersTest() {
+      if(!confirm('Это запустит обновление подписчиков для ВСЕХ аккаунтов. Это может занять время и потратить квоту API. Продолжить?')) return;
+      
+      statusEl.textContent = 'Запуск обновления подписчиков...';
+      const res = await fetch('/api/test-followers-update', { method: 'POST' });
+      const data = await res.json();
+      if (res.ok) {
+        statusEl.textContent = 'Обновление подписчиков запущено: ' + JSON.stringify(data);
+      } else {
+        statusEl.textContent = 'Ошибка запуска обновления: ' + (data.error || res.status);
       }
     }
 
@@ -282,6 +312,8 @@ const html = `<!doctype html>
     document.getElementById('refresh').addEventListener('click', loadSettings);
     document.getElementById('test-run').addEventListener('click', runTest);
     document.getElementById('test-run-top').addEventListener('click', runTest);
+    document.getElementById('test-followers-update').addEventListener('click', runFollowersTest);
+    
     loadSettings();
   </script>
 </body>
@@ -315,6 +347,7 @@ app.post("/api/settings", async (c) => {
     const postsPerAccount = Math.min(200, Math.max(1, Number(body.postsPerAccount || 0)));
     const testAccountsLimit = Math.min(10, Math.max(0, Number(body.testAccountsLimit || 0)));
     const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
+    const followersUpdateFreqDays = Math.max(1, Number(body.followersUpdateFreqDays || 4));
 
     const updated = await updateAppSettings({
       schedulerMode,
@@ -324,6 +357,7 @@ app.post("/api/settings", async (c) => {
       postsPerAccount,
       testAccountsLimit,
       viralityFormula,
+      followersUpdateFreqDays,
     });
 
     console.log("💾 [API] POST /api/settings saved", updated);
@@ -349,6 +383,24 @@ app.post("/api/test-run", async (c) => {
   } catch (err: any) {
     console.error("Failed to start test run", err);
     return c.json({ error: "Failed to start test run", details: String(err) }, 500);
+  }
+});
+
+app.post("/api/test-followers-update", async (c) => {
+  try {
+    console.log("▶️ [API] POST /api/test-followers-update");
+    // Fire-and-forget so UI returns instantly
+    executeFollowerUpdate(mastra)
+      .then(() => {
+        console.log("✅ [API] Followers update test run completed");
+      })
+      .catch((err) => {
+        console.error("❌ [API] Followers update test run failed", err);
+      });
+    return c.json({ status: "started" });
+  } catch (err: any) {
+    console.error("Failed to start follower update", err);
+    return c.json({ error: "Failed to start follower update", details: String(err) }, 500);
   }
 });
 

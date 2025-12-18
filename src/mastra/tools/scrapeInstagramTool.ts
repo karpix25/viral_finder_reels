@@ -48,38 +48,15 @@ export const scrapeInstagramTool = createTool({
       "X-Rapidapi-Host": rapidApiHost,
     };
 
-    const fetchFollowersCount = async (): Promise<number> => {
-      try {
-        const url = new URL(`https://${rapidApiHost}/v1/followers`);
-        url.searchParams.set("username_or_id_or_url", username);
-        const res = await fetch(url.toString(), { headers });
-        if (!res.ok) {
-          const errText = await res.text();
-          logger?.warn("⚠️ [ScrapeInstagram] Followers request failed", {
-            status: res.status,
-            errText,
-          });
-          return 0;
-        }
-        const data = await res.json();
-        const total = data?.data?.total ?? data?.data?.count ?? 0;
-        logger?.info("📊 [ScrapeInstagram] Followers fetched", {
-          username,
-          followers: total,
-        });
-        return Number(total) || 0;
-      } catch (err: any) {
-        logger?.warn("⚠️ [ScrapeInstagram] Followers fetch error", {
-          error: String(err),
-        });
-        return 0;
-      }
+    const getFollowerCountFn = async () => {
+      const { getFollowerCount } = await import("../services/accounts.js");
+      return await getFollowerCount(username);
     };
 
     logger?.info("📝 [ScrapeInstagram] Fetching via RapidAPI /v1/posts");
 
     const reels: any[] = [];
-    let followersCount = await fetchFollowersCount();
+    let followersCount = await getFollowerCountFn();
     let paginationToken: string | undefined;
     const maxPages = 10; // safety cap
     let pageCount = 0;

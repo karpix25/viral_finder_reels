@@ -1,0 +1,779 @@
+🔧 Inngest initialized: DEVELOPMENT
+🔑 Inngest keys present: { hasEventKey: false, hasSigningKey: true }
+[33mWARN[39m [2025-10-24 12:30:30.759 +0000] (Mastra): [36mIf you are using a custom instrumentation file or want to disable this warning, set the globalThis.___MASTRA_TELEMETRY___ variable to true in your instrumentation file.[39m
+🔧 [Main] About to start CronScheduler { nodeEnv: undefined }
+⏰ [CronScheduler] startCronScheduler called { nodeEnv: undefined }
+⏰ [CronScheduler] Skipping cron scheduler in development (using Inngest Dev Server)
+✅ [Main] CronScheduler started successfully
+🚀 Running Instagram analysis workflow manually...
+[32mINFO[39m [2025-10-24 12:30:30.791 +0000] (Mastra): [36m🤖 [TelegramBot] Starting Telegram bot[39m
+[32mINFO[39m [2025-10-24 12:30:30.792 +0000] (Mastra): [36m🚀 [TelegramBot] Launching bot with polling in background...[39m
+[32mINFO[39m [2025-10-24 12:30:30.793 +0000] (Mastra): [36m✅ [TelegramBot] Bot launch initiated in background, not blocking server[39m
+[32mINFO[39m [2025-10-24 12:30:30.795 +0000] (Mastra): [36m🚀 [Workflow] Starting Instagram viral analysis with instant notifications[39m
+[32mINFO[39m [2025-10-24 12:30:30.795 +0000] (Mastra): [36m📊 [Step0] Checking workflow progress[39m
+[32mINFO[39m [2025-10-24 12:30:31.266 +0000] (Mastra): [36m📊 [Step0] Progress loaded[39m
+    [35mstartIndex[39m: 255
+[32mINFO[39m [2025-10-24 12:30:31.267 +0000] (Mastra): [36m📖 [Step1] Reading Instagram accounts from Google Sheets[39m
+[32mINFO[39m [2025-10-24 12:30:31.268 +0000] (Mastra): [36m🔧 [ReadGoogleSheets] Starting execution[39m
+[32mINFO[39m [2025-10-24 12:30:31.269 +0000] (Mastra): [36m📝 [ReadGoogleSheets] Fetching connection settings[39m
+[32mINFO[39m [2025-10-24 12:30:31.269 +0000] (Mastra): [36m📝 [ReadGoogleSheets] Fetching Google Sheets connection[39m
+[32mINFO[39m [2025-10-24 12:30:31.469 +0000] (Mastra): [36m📝 [ReadGoogleSheets] Creating Google Sheets client[39m
+    [35mspreadsheetId[39m: "1AES2YwY_ejmYWblQfABO7e9IUdJhNGeuqCTWvlZ-Jnk"
+[32mINFO[39m [2025-10-24 12:30:31.470 +0000] (Mastra): [36m📝 [ReadGoogleSheets] Reading data from spreadsheet[39m
+    [35mspreadsheetId[39m: "1AES2YwY_ejmYWblQfABO7e9IUdJhNGeuqCTWvlZ-Jnk"
+[32mINFO[39m [2025-10-24 12:30:31.699 +0000] (Mastra): [36m✅ [ReadGoogleSheets] Completed successfully[39m
+    [35maccountsCount[39m: 259
+    [35maccounts[39m: [
+      "hecozybookclub_",
+      "onlineprofitvault",
+      "mx.altern",
+      "innerdrivemindset",
+      "foundr",
+      "spirittmindset",
+      "income.ivy",
+      "bossbabesmind",
+      "hormozi",
+      "matthgray",
+      "sixfigurethoughts",
+      "thedesignerbuilderco",
+      "sukhsidhudxb",
+      "marketing.growmatics",
+      "startupbydoc",
+      "execute",
+      "collectivewisdomco",
+      "sei.come.sei",
+      "sugarpunchmarketing",
+      "getyourfirststore",
+      "thewealthydesk",
+      "wealth.insightz",
+      "3.am_codes",
+      "tales_bytanveer",
+      "the.financial.boss",
+      "entrepreneurialogyy",
+      "themarkethustle",
+      "charlies.money",
+      "wealthexpanded",
+      "business.vaults",
+      "nextelevance",
+      "itswealthyeducator",
+      "prud3ntia",
+      "business.boomerang",
+      "_future____billionaire",
+      "one.dollarvault",
+      "worldka_business",
+      "arising.ai",
+      "no_excuses_era",
+      "theaidigitalprofits",
+      "stocks.aura",
+      "echo_verse.co",
+      "rj9trending",
+      "ruhanxedits",
+      "masterofmyfath",
+      "the.civilized.savagery",
+      "zenithtier",
+      "mental.fitness.gym",
+      "trading.grind",
+      "wealthaire",
+      "billion.dollars.motivation",
+      "mindshifts.mastery",
+      "officialproductivity",
+      "dropship",
+      "autods_tools",
+      "zealotry.path",
+      "ingrowvy",
+      "polymath.path",
+      "billionaire._.100",
+      "theluxurywealth",
+      "itz.sanu033",
+      "wasimscales",
+      "xero2million",
+      "muzammilthegoodboy",
+      "kamaihub",
+      "manlystix",
+      "insightsfaceless",
+      "growlife.abhishek",
+      "cryptotezro",
+      "positive_mindset07",
+      "iintrovert_yash",
+      "alexxmarketing",
+      "pumpdotfun_",
+      "windsays",
+      "moneymenttality",
+      "thegoldenscripture",
+      "historyofwinning",
+      "businessmindset101",
+      "greatmindsays",
+      "zenris_e",
+      "elitedriive",
+      "elitedriive",
+      "auricecho",
+      "decoded_diary",
+      "nuclearwealth",
+      "marketshift.io",
+      "startupadviser",
+      "nicolasboucherfinance",
+      "startup_rules",
+      "wealthy.og",
+      "strongest_words",
+      "hustlersvibez",
+      "thalvain",
+      "koveproperties",
+      "expocasmd",
+      "_akmal_06p",
+      "arshad_khan808",
+      "bizz_ventures",
+      "motivationindepth",
+      "codewithprashantt",
+      "finance.pillar",
+      "telegram_in_.bio",
+      "wealthy.wishdom",
+      "rahulvgsmarketing",
+      "the.trade.talks",
+      "firewithin.now",
+      "coders.learning",
+      "digitalwealthkid",
+      "mxeditzzzz",
+      "kevcahillcapital",
+      "maviimarketing",
+      "legacy_architect",
+      "think.millionaire02",
+      "phonethoughts",
+      "waking.thebeast",
+      "themarketchief",
+      "tradinginspires",
+      "thedominentking",
+      "enphasizer",
+      "alphaspeeks",
+      "thatgurlceo",
+      "growthtakeguts",
+      "mindthesium",
+      "zyeontrade",
+      "visionsticx_",
+      "financewealthss",
+      "thegrowthpurpose",
+      "bhupendra4u",
+      "aspirewhitin",
+      "prasadyash",
+      "tips4success01",
+      "vintagevibetalk",
+      "zell_education",
+      "livmanish",
+      "eaglecybersolutions.in",
+      "fiitnessfuel",
+      "cinevertise",
+      "traderbirjesh",
+      "coders.world",
+      "skilmate",
+      "harshviijay",
+      "malleswari_neelam",
+      "growthmindwave",
+      "boja.brand",
+      "an_ignorant_man_",
+      "vintagevibetalk",
+      "liveyourminds",
+      "dr.idriss",
+      "amyyjaruczyk",
+      "smileberussia",
+      "wealth_socity",
+      "wealthybux",
+      "peakurself",
+      "skillup.hub",
+      "alphaspeeks",
+      "dreamswitch_daily",
+      "stocktradingaddict",
+      "advicefromtraders",
+      "vzprof",
+      "endlessauraa_",
+      "kaizenexecutive",
+      "endlessauraa_",
+      "successoutright",
+      "harvard_business_review",
+      "grantcardone",
+      "wsj",
+      "powerbybooks",
+      "elite.mindsets",
+      "entrepreneurshipfacts",
+      "forbes",
+      "bloombergbusiness",
+      "entrepreneur",
+      "garyvee",
+      "digitaldollar",
+      "aidecoderr",
+      "aiwavelab",
+      "wealth.tactic",
+      "profitplaymaker",
+      "entrepreneursflix",
+      "futuregennews",
+      "ideaslabglobal",
+      "techfoundersclub",
+      "marketing.intact",
+      "femaleboss_mindset",
+      "bossbaddiemindset",
+      "femalempire.co",
+      "confidentlywomen",
+      "bossbabe.inc",
+      "books_preneur",
+      "test_account_notification_123",
+      "livelifesuccessfull",
+      "booklyreads",
+      "coffeewithbooks__",
+      "marketingharry",
+      "growthcents",
+      "promptpocket",
+      "inspiresmotivations",
+      "moneyy.us",
+      "nishkarshsharmaa",
+      "true5phere",
+      "wolfxspirit",
+      "webaddicted.in",
+      "glitch.mindset",
+      "motivated_orbit",
+      "growistic9",
+      "workwithkashish",
+      "lovevyasbusiness",
+      "thegen_founder",
+      "codingstream.ai",
+      "adi.nisal",
+      "upzenix",
+      "infinitegrowthx",
+      "ciatruth",
+      "gameofhustler",
+      "bookreadersclub",
+      "learnfromblogs",
+      "advancingman",
+      "reputeforge",
+      "thebranding.ai",
+      "nftworld",
+      "askvinh",
+      "theprivatemindset",
+      "farucomar",
+      "motivate.wise",
+      "bookwises",
+      "my_21yrs_mf_journey",
+      "phoenix.wealth.official",
+      "mynd_switch",
+      "wealth",
+      "founderscreedd",
+      "studywhytheyrich",
+      "studywhytheyrich",
+      "goodwithinvesting",
+      "bro.business66",
+      "tetroxen",
+      "productive_pythons",
+      "moneywealthmoves",
+      "thebusinesssuperhero",
+      "pw_acca",
+      "wealthyhint",
+      "digitalwealthmate",
+      "luxuriousbymm",
+      "digitalmoneyceo",
+      "autofolio_",
+      "financefirstss",
+      "skylineicon",
+      "wjr_media",
+      "evolvia.x",
+      "financefocused_",
+      "veilprofit",
+      "kingshift.club",
+      "incstp",
+      "_focused_quotes",
+      "daily_finance_adda",
+      "thebillionairecloset",
+      "tshiamofaceless",
+      "thegreatentrepreneurs",
+      "digitalrelentless",
+      "visionaryyminds"
+    ]
+[32mINFO[39m [2025-10-24 12:30:31.699 +0000] (Mastra): [36m✅ [Step1] Accounts read successfully[39m
+    [35mtotalInSheet[39m: 259
+    [35mprocessingNow[39m: 4
+    [35mstartIndex[39m: 255
+    [35mendIndex[39m: 259
+    [35mlimit[39m: 5
+[32mINFO[39m [2025-10-24 12:30:31.700 +0000] (Mastra): [36m✅ [Step1] This is the final batch[39m
+    [35mmessage[39m: "After this run, progress will reset to 0 for next full cycle."
+[32mINFO[39m [2025-10-24 12:30:31.700 +0000] (Mastra): [36m📝 [Step2] Processing account[39m
+    [35maccountUrl[39m: "tshiamofaceless"
+[32mINFO[39m [2025-10-24 12:30:31.700 +0000] (Mastra): [36m🔧 [ScrapeInstagram] Starting execution[39m
+    [35maccountUrl[39m: "tshiamofaceless"
+[32mINFO[39m [2025-10-24 12:30:31.700 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted username[39m
+    [35musername[39m: "tshiamofaceless"
+[32mINFO[39m [2025-10-24 12:30:31.701 +0000] (Mastra): [36m📝 [ScrapeInstagram] Starting Apify actor[39m
+[32mINFO[39m [2025-10-24 12:30:32.256 +0000] (Mastra): [36m📝 [ScrapeInstagram] Waiting for actor to finish[39m
+    [35mrunId[39m: "3u9IGGgf7KKr4shNz"
+[32mINFO[39m [2025-10-24 12:30:37.534 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "SUCCEEDED"
+    [35mattempts[39m: 1
+[32mINFO[39m [2025-10-24 12:30:37.535 +0000] (Mastra): [36m📝 [ScrapeInstagram] Fetching results[39m
+[32mINFO[39m [2025-10-24 12:30:37.733 +0000] (Mastra): [36m📝 [ScrapeInstagram] Raw results structure[39m
+    [35misArray[39m: true
+    [35mtype[39m: "object"
+    [35mkeys[39m: [
+      "0"
+    ]
+    [35mfirstItemType[39m: "object"
+    error: null
+[32mINFO[39m [2025-10-24 12:30:37.734 +0000] (Mastra): [36m📝 [ScrapeInstagram] Processing results[39m
+    [35mresultsCount[39m: 1
+[32mINFO[39m [2025-10-24 12:30:37.734 +0000] (Mastra): [36m📝 [ScrapeInstagram] First result sample[39m
+    [35mkeys[39m: [
+      "inputUrl",
+      "id",
+      "username",
+      "url",
+      "fullName",
+      "biography",
+      "externalUrls",
+      "externalUrl",
+      "externalUrlShimmed",
+      "followersCount",
+      "followsCount",
+      "hasChannel",
+      "highlightReelCount",
+      "isBusinessAccount",
+      "joinedRecently",
+      "businessCategoryName",
+      "private",
+      "verified",
+      "profilePicUrl",
+      "profilePicUrlHD",
+      "igtvVideoCount",
+      "relatedProfiles",
+      "latestIgtvVideos",
+      "postsCount",
+      "latestPosts",
+      "fbid"
+    ]
+    [35musername[39m: "tshiamofaceless"
+    [35merrorDescription[39m: null
+    [35mlatestPostsCount[39m: 12
+    error: null
+[32mINFO[39m [2025-10-24 12:30:37.734 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted posts from latestPosts[39m
+    [35mtotalPosts[39m: 12
+[32mINFO[39m [2025-10-24 12:30:37.734 +0000] (Mastra): [36m🔍 [ScrapeInstagram] First reel raw data sample[39m
+    [35murl[39m: "https://www.instagram.com/p/DQKGYJnDYww/"
+    [35mkeys[39m: [
+      "id",
+      "type",
+      "shortCode",
+      "caption",
+      "hashtags",
+      "mentions",
+      "url",
+      "commentsCount",
+      "dimensionsHeight",
+      "dimensionsWidth",
+      "displayUrl",
+      "images",
+      "videoUrl",
+      "alt",
+      "likesCount",
+      "videoViewCount",
+      "timestamp",
+      "childPosts",
+      "ownerUsername",
+      "ownerId",
+      "productType",
+      "isCommentsDisabled"
+    ]
+    [35mvideoViewCount[39m: 285
+    [35mlikesCount[39m: 18
+    [35mcommentsCount[39m: 4
+[32mINFO[39m [2025-10-24 12:30:37.734 +0000] (Mastra): [36m✅ [ScrapeInstagram] Completed successfully[39m
+    [35musername[39m: "tshiamofaceless"
+    [35mfollowersCount[39m: 69025
+    [35mreelsCount[39m: 12
+    [35mrelatedProfilesCount[39m: 0
+[32mINFO[39m [2025-10-24 12:30:37.735 +0000] (Mastra): [36m✅ [Step2] Account scraped[39m
+    [35musername[39m: "tshiamofaceless"
+    [35mreelsCount[39m: 12
+[32mINFO[39m [2025-10-24 12:30:37.735 +0000] (Mastra): [36m📊 [Step2] Analyzing reels and carousels for virality[39m
+    [35musername[39m: "tshiamofaceless"
+    [35mtotalPosts[39m: 12
+    [35maverageViews[39m: 794.75
+[32mINFO[39m [2025-10-24 12:30:37.735 +0000] (Mastra): [36m📏 [Step2] Adaptive criteria set[39m
+    [35musername[39m: "tshiamofaceless"
+    [35mfollowersCount[39m: 69025
+    [35maccountSizeCategory[39m: "Малый"
+    [35mminimumViews[39m: 50000
+    [35mminimumEngagement[39m: 5000
+[32mINFO[39m [2025-10-24 12:30:37.735 +0000] (Mastra): [36m📝 [Step2] Processing account[39m
+    [35maccountUrl[39m: "thegreatentrepreneurs"
+[32mINFO[39m [2025-10-24 12:30:37.736 +0000] (Mastra): [36m🔧 [ScrapeInstagram] Starting execution[39m
+    [35maccountUrl[39m: "thegreatentrepreneurs"
+[32mINFO[39m [2025-10-24 12:30:37.736 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted username[39m
+    [35musername[39m: "thegreatentrepreneurs"
+[32mINFO[39m [2025-10-24 12:30:37.736 +0000] (Mastra): [36m📝 [ScrapeInstagram] Starting Apify actor[39m
+[32mINFO[39m [2025-10-24 12:30:38.122 +0000] (Mastra): [36m📝 [ScrapeInstagram] Waiting for actor to finish[39m
+    [35mrunId[39m: "UjSva8goCO2QzTPPf"
+[32mINFO[39m [2025-10-24 12:30:43.401 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "RUNNING"
+    [35mattempts[39m: 1
+[32mINFO[39m [2025-10-24 12:30:48.614 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "SUCCEEDED"
+    [35mattempts[39m: 2
+[32mINFO[39m [2025-10-24 12:30:48.614 +0000] (Mastra): [36m📝 [ScrapeInstagram] Fetching results[39m
+[32mINFO[39m [2025-10-24 12:30:48.787 +0000] (Mastra): [36m📝 [ScrapeInstagram] Raw results structure[39m
+    [35misArray[39m: true
+    [35mtype[39m: "object"
+    [35mkeys[39m: [
+      "0"
+    ]
+    [35mfirstItemType[39m: "object"
+    error: null
+[32mINFO[39m [2025-10-24 12:30:48.787 +0000] (Mastra): [36m📝 [ScrapeInstagram] Processing results[39m
+    [35mresultsCount[39m: 1
+[32mINFO[39m [2025-10-24 12:30:48.787 +0000] (Mastra): [36m📝 [ScrapeInstagram] First result sample[39m
+    [35mkeys[39m: [
+      "inputUrl",
+      "id",
+      "username",
+      "url",
+      "fullName",
+      "biography",
+      "externalUrls",
+      "followersCount",
+      "followsCount",
+      "hasChannel",
+      "highlightReelCount",
+      "isBusinessAccount",
+      "joinedRecently",
+      "businessCategoryName",
+      "private",
+      "verified",
+      "profilePicUrl",
+      "profilePicUrlHD",
+      "igtvVideoCount",
+      "relatedProfiles",
+      "latestIgtvVideos",
+      "postsCount",
+      "latestPosts",
+      "fbid"
+    ]
+    [35musername[39m: "thegreatentrepreneurs"
+    [35merrorDescription[39m: null
+    [35mlatestPostsCount[39m: 12
+    error: null
+[32mINFO[39m [2025-10-24 12:30:48.788 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted posts from latestPosts[39m
+    [35mtotalPosts[39m: 12
+[32mINFO[39m [2025-10-24 12:30:48.788 +0000] (Mastra): [36m🔍 [ScrapeInstagram] First reel raw data sample[39m
+    [35murl[39m: "https://www.instagram.com/p/DQGq9hREUIV/"
+    [35mkeys[39m: [
+      "id",
+      "type",
+      "shortCode",
+      "caption",
+      "hashtags",
+      "mentions",
+      "url",
+      "commentsCount",
+      "dimensionsHeight",
+      "dimensionsWidth",
+      "displayUrl",
+      "images",
+      "alt",
+      "likesCount",
+      "timestamp",
+      "childPosts",
+      "ownerUsername",
+      "ownerId",
+      "isCommentsDisabled"
+    ]
+    [35mlikesCount[39m: 895
+    [35mcommentsCount[39m: 2
+[32mINFO[39m [2025-10-24 12:30:48.788 +0000] (Mastra): [36m✅ [ScrapeInstagram] Completed successfully[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mfollowersCount[39m: 187523
+    [35mreelsCount[39m: 4
+    [35mrelatedProfilesCount[39m: 0
+[32mINFO[39m [2025-10-24 12:30:48.790 +0000] (Mastra): [36m✅ [Step2] Account scraped[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mreelsCount[39m: 4
+[32mINFO[39m [2025-10-24 12:30:48.791 +0000] (Mastra): [36m📊 [Step2] Analyzing reels and carousels for virality[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mtotalPosts[39m: 4
+    [35maverageViews[39m: 0
+[32mINFO[39m [2025-10-24 12:30:48.791 +0000] (Mastra): [36m📏 [Step2] Adaptive criteria set[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mfollowersCount[39m: 187523
+    [35maccountSizeCategory[39m: "Средний"
+    [35mminimumViews[39m: 200000
+    [35mminimumEngagement[39m: 20000
+[32mINFO[39m [2025-10-24 12:30:48.803 +0000] (Mastra): [36m🔥 [Step2] VIRAL REEL FOUND![39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DPv3M81iTzE/"
+    [35mageInDays[39m: 11
+    [35mviralityReason[39m: "Engagement: 23,816 (23,748 likes + 68 comments) >= 20,000"
+    [35mgrowthMultiplier[39m: "0.0"
+    [35mviewCount[39m: 0
+    [35mengagement[39m: 23816
+    [35maverageViews[39m: 0
+    [35maccountSizeCategory[39m: "Средний"
+    [35mminimumViewsThreshold[39m: 200000
+    [35mminimumEngagementThreshold[39m: 20000
+[32mINFO[39m [2025-10-24 12:30:48.804 +0000] (Mastra): [36m🚀 [SendSingleViral] Checking if reel was already sent[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DPv3M81iTzE/"
+[32mINFO[39m [2025-10-24 12:30:49.226 +0000] (Mastra): [36m🚀 [SendSingleViral] Sending viral reel to Telegram[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DPv3M81iTzE/"
+[32mINFO[39m [2025-10-24 12:30:49.226 +0000] (Mastra): [36m📝 [SendSingleViral] Telegram settings[39m
+    [35mchatId[39m: "-1003149740303"
+    [35mthread[39m: "основной чат (без ветки)"
+[32mINFO[39m [2025-10-24 12:30:49.863 +0000] (Mastra): [36m✅ [SendSingleViral] Message sent successfully[39m
+    [35mmessageId[39m: 90
+[32mINFO[39m [2025-10-24 12:30:49.928 +0000] (Mastra): [36m✅ [SendSingleViral] Reel saved to database[39m
+    [35mreelUrl[39m: "https://www.instagram.com/p/DPv3M81iTzE/"
+[32mINFO[39m [2025-10-24 12:30:49.928 +0000] (Mastra): [36m✅ [Step2] Viral reel sent to Telegram[39m
+    [35musername[39m: "thegreatentrepreneurs"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DPv3M81iTzE/"
+[32mINFO[39m [2025-10-24 12:30:49.928 +0000] (Mastra): [36m📝 [Step2] Processing account[39m
+    [35maccountUrl[39m: "digitalrelentless"
+[32mINFO[39m [2025-10-24 12:30:49.929 +0000] (Mastra): [36m🔧 [ScrapeInstagram] Starting execution[39m
+    [35maccountUrl[39m: "digitalrelentless"
+[32mINFO[39m [2025-10-24 12:30:49.929 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted username[39m
+    [35musername[39m: "digitalrelentless"
+[32mINFO[39m [2025-10-24 12:30:49.929 +0000] (Mastra): [36m📝 [ScrapeInstagram] Starting Apify actor[39m
+[32mINFO[39m [2025-10-24 12:30:50.203 +0000] (Mastra): [36m📝 [ScrapeInstagram] Waiting for actor to finish[39m
+    [35mrunId[39m: "pyoWS9MIgd4ZrJav8"
+[32mINFO[39m [2025-10-24 12:30:55.475 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "RUNNING"
+    [35mattempts[39m: 1
+[32mINFO[39m [2025-10-24 12:31:00.685 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "RUNNING"
+    [35mattempts[39m: 2
+[32mINFO[39m [2025-10-24 12:31:05.910 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "SUCCEEDED"
+    [35mattempts[39m: 3
+[32mINFO[39m [2025-10-24 12:31:05.910 +0000] (Mastra): [36m📝 [ScrapeInstagram] Fetching results[39m
+[32mINFO[39m [2025-10-24 12:31:06.018 +0000] (Mastra): [36m📝 [ScrapeInstagram] Raw results structure[39m
+    [35misArray[39m: true
+    [35mtype[39m: "object"
+    [35mkeys[39m: [
+      "0"
+    ]
+    [35mfirstItemType[39m: "object"
+    error: null
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m📝 [ScrapeInstagram] Processing results[39m
+    [35mresultsCount[39m: 1
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m📝 [ScrapeInstagram] First result sample[39m
+    [35mkeys[39m: [
+      "inputUrl",
+      "id",
+      "username",
+      "url",
+      "fullName",
+      "biography",
+      "externalUrls",
+      "followersCount",
+      "followsCount",
+      "hasChannel",
+      "highlightReelCount",
+      "isBusinessAccount",
+      "joinedRecently",
+      "businessCategoryName",
+      "private",
+      "verified",
+      "profilePicUrl",
+      "profilePicUrlHD",
+      "igtvVideoCount",
+      "relatedProfiles",
+      "latestIgtvVideos",
+      "postsCount",
+      "latestPosts",
+      "fbid"
+    ]
+    [35musername[39m: "digitalrelentless"
+    [35merrorDescription[39m: null
+    [35mlatestPostsCount[39m: 12
+    error: null
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted posts from latestPosts[39m
+    [35mtotalPosts[39m: 12
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m🔍 [ScrapeInstagram] First reel raw data sample[39m
+    [35murl[39m: "https://www.instagram.com/p/DQKOL-DkV41/"
+    [35mkeys[39m: [
+      "id",
+      "type",
+      "shortCode",
+      "caption",
+      "hashtags",
+      "mentions",
+      "url",
+      "commentsCount",
+      "dimensionsHeight",
+      "dimensionsWidth",
+      "displayUrl",
+      "images",
+      "videoUrl",
+      "alt",
+      "likesCount",
+      "videoViewCount",
+      "timestamp",
+      "childPosts",
+      "locationName",
+      "locationId",
+      "ownerUsername",
+      "ownerId",
+      "productType",
+      "isCommentsDisabled"
+    ]
+    [35mvideoViewCount[39m: 7013
+    [35mlikesCount[39m: 606
+    [35mcommentsCount[39m: 4
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m✅ [ScrapeInstagram] Completed successfully[39m
+    [35musername[39m: "digitalrelentless"
+    [35mfollowersCount[39m: 602
+    [35mreelsCount[39m: 12
+    [35mrelatedProfilesCount[39m: 0
+[32mINFO[39m [2025-10-24 12:31:06.019 +0000] (Mastra): [36m✅ [Step2] Account scraped[39m
+    [35musername[39m: "digitalrelentless"
+    [35mreelsCount[39m: 12
+[32mINFO[39m [2025-10-24 12:31:06.020 +0000] (Mastra): [36m📊 [Step2] Analyzing reels and carousels for virality[39m
+    [35musername[39m: "digitalrelentless"
+    [35mtotalPosts[39m: 12
+    [35maverageViews[39m: 16210.166666666666
+[32mINFO[39m [2025-10-24 12:31:06.020 +0000] (Mastra): [36m📏 [Step2] Adaptive criteria set[39m
+    [35musername[39m: "digitalrelentless"
+    [35mfollowersCount[39m: 602
+    [35maccountSizeCategory[39m: "Малый"
+    [35mminimumViews[39m: 50000
+    [35mminimumEngagement[39m: 5000
+[32mINFO[39m [2025-10-24 12:31:06.020 +0000] (Mastra): [36m🔥 [Step2] VIRAL REEL FOUND![39m
+    [35musername[39m: "digitalrelentless"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DQHohigDZVz/"
+    [35mageInDays[39m: 1
+    [35mviralityReason[39m: "Views: 78,479 >= 50,000"
+    [35mgrowthMultiplier[39m: "4.8"
+    [35mviewCount[39m: 78479
+    [35mengagement[39m: 5438
+    [35maverageViews[39m: 16210.166666666666
+    [35maccountSizeCategory[39m: "Малый"
+    [35mminimumViewsThreshold[39m: 50000
+    [35mminimumEngagementThreshold[39m: 5000
+[32mINFO[39m [2025-10-24 12:31:06.020 +0000] (Mastra): [36m🚀 [SendSingleViral] Checking if reel was already sent[39m
+    [35musername[39m: "digitalrelentless"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DQHohigDZVz/"
+[32mINFO[39m [2025-10-24 12:31:06.443 +0000] (Mastra): [36m🚀 [SendSingleViral] Sending viral reel to Telegram[39m
+    [35musername[39m: "digitalrelentless"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DQHohigDZVz/"
+[32mINFO[39m [2025-10-24 12:31:06.443 +0000] (Mastra): [36m📝 [SendSingleViral] Telegram settings[39m
+    [35mchatId[39m: "-1003149740303"
+    [35mthread[39m: "основной чат (без ветки)"
+[32mINFO[39m [2025-10-24 12:31:06.797 +0000] (Mastra): [36m✅ [SendSingleViral] Message sent successfully[39m
+    [35mmessageId[39m: 91
+[32mINFO[39m [2025-10-24 12:31:06.861 +0000] (Mastra): [36m✅ [SendSingleViral] Reel saved to database[39m
+    [35mreelUrl[39m: "https://www.instagram.com/p/DQHohigDZVz/"
+[32mINFO[39m [2025-10-24 12:31:06.861 +0000] (Mastra): [36m✅ [Step2] Viral reel sent to Telegram[39m
+    [35musername[39m: "digitalrelentless"
+    [35mreelUrl[39m: "https://www.instagram.com/p/DQHohigDZVz/"
+[32mINFO[39m [2025-10-24 12:31:06.862 +0000] (Mastra): [36m📝 [Step2] Processing account[39m
+    [35maccountUrl[39m: "visionaryyminds"
+[32mINFO[39m [2025-10-24 12:31:06.862 +0000] (Mastra): [36m🔧 [ScrapeInstagram] Starting execution[39m
+    [35maccountUrl[39m: "visionaryyminds"
+[32mINFO[39m [2025-10-24 12:31:06.862 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted username[39m
+    [35musername[39m: "visionaryyminds"
+[32mINFO[39m [2025-10-24 12:31:06.862 +0000] (Mastra): [36m📝 [ScrapeInstagram] Starting Apify actor[39m
+[32mINFO[39m [2025-10-24 12:31:07.236 +0000] (Mastra): [36m📝 [ScrapeInstagram] Waiting for actor to finish[39m
+    [35mrunId[39m: "ooD0CYco5DQKCxIRA"
+[32mINFO[39m [2025-10-24 12:31:12.448 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "RUNNING"
+    [35mattempts[39m: 1
+[32mINFO[39m [2025-10-24 12:31:17.729 +0000] (Mastra): [36m📝 [ScrapeInstagram] Actor status[39m
+    [35mrunStatus[39m: "SUCCEEDED"
+    [35mattempts[39m: 2
+[32mINFO[39m [2025-10-24 12:31:17.729 +0000] (Mastra): [36m📝 [ScrapeInstagram] Fetching results[39m
+[32mINFO[39m [2025-10-24 12:31:18.356 +0000] (Mastra): [36m📝 [ScrapeInstagram] Raw results structure[39m
+    [35misArray[39m: true
+    [35mtype[39m: "object"
+    [35mkeys[39m: [
+      "0"
+    ]
+    [35mfirstItemType[39m: "object"
+    error: null
+[32mINFO[39m [2025-10-24 12:31:18.356 +0000] (Mastra): [36m📝 [ScrapeInstagram] Processing results[39m
+    [35mresultsCount[39m: 1
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m📝 [ScrapeInstagram] First result sample[39m
+    [35mkeys[39m: [
+      "inputUrl",
+      "id",
+      "username",
+      "url",
+      "fullName",
+      "biography",
+      "externalUrls",
+      "followersCount",
+      "followsCount",
+      "hasChannel",
+      "highlightReelCount",
+      "isBusinessAccount",
+      "joinedRecently",
+      "businessCategoryName",
+      "private",
+      "verified",
+      "profilePicUrl",
+      "profilePicUrlHD",
+      "igtvVideoCount",
+      "relatedProfiles",
+      "latestIgtvVideos",
+      "postsCount",
+      "latestPosts",
+      "fbid"
+    ]
+    [35musername[39m: "visionaryyminds"
+    [35merrorDescription[39m: null
+    [35mlatestPostsCount[39m: 12
+    error: null
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m📝 [ScrapeInstagram] Extracted posts from latestPosts[39m
+    [35mtotalPosts[39m: 12
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m🔍 [ScrapeInstagram] First reel raw data sample[39m
+    [35murl[39m: "https://www.instagram.com/p/DPgdJvAiBGo/"
+    [35mkeys[39m: [
+      "id",
+      "type",
+      "shortCode",
+      "caption",
+      "hashtags",
+      "mentions",
+      "url",
+      "commentsCount",
+      "dimensionsHeight",
+      "dimensionsWidth",
+      "displayUrl",
+      "images",
+      "alt",
+      "likesCount",
+      "timestamp",
+      "childPosts",
+      "ownerUsername",
+      "ownerId",
+      "taggedUsers",
+      "isPinned",
+      "isCommentsDisabled"
+    ]
+    [35mlikesCount[39m: 98
+    [35mcommentsCount[39m: 0
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m✅ [ScrapeInstagram] Completed successfully[39m
+    [35musername[39m: "visionaryyminds"
+    [35mfollowersCount[39m: 572299
+    [35mreelsCount[39m: 11
+    [35mrelatedProfilesCount[39m: 5
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m✅ [Step2] Account scraped[39m
+    [35musername[39m: "visionaryyminds"
+    [35mreelsCount[39m: 11
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m📊 [Step2] Analyzing reels and carousels for virality[39m
+    [35musername[39m: "visionaryyminds"
+    [35mtotalPosts[39m: 11
+    [35maverageViews[39m: 0
+[32mINFO[39m [2025-10-24 12:31:18.357 +0000] (Mastra): [36m📏 [Step2] Adaptive criteria set[39m
+    [35musername[39m: "visionaryyminds"
+    [35mfollowersCount[39m: 572299
+    [35maccountSizeCategory[39m: "Средний"
+    [35mminimumViews[39m: 200000
+    [35mminimumEngagement[39m: 20000
+[32mINFO[39m [2025-10-24 12:31:18.797 +0000] (Mastra): [36m✅ [Workflow] Analysis complete[39m
+    [35mtotalAccountsProcessed[39m: 4
+    [35mtotalViralReelsSent[39m: 2
+    [35mnextStartIndex[39m: 0
+    [35mcycleComplete[39m: true
+✅ Workflow completed successfully!
+📊 Results: { totalAccountsProcessed: 4, totalViralReelsSent: 2 }

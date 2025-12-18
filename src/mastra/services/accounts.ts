@@ -118,3 +118,17 @@ export async function seedInstagramAccountsFromFile(
   );
   seededFromFile = true;
 }
+
+export async function getFollowerCount(username: string): Promise<number> {
+  await ensureInstagramAccountsTable();
+  const cleaned = username.trim();
+  if (!cleaned) return 0;
+
+  const result = await db
+    .select({ followers: instagramAccounts.followers })
+    .from(instagramAccounts)
+    .where(eq(instagramAccounts.username, cleaned))
+    .limit(1);
+
+  return result[0]?.followers ?? 0;
+}

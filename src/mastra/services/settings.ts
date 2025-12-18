@@ -10,6 +10,7 @@ export type AppSettings = {
   postsPerAccount: number; // how many posts/reels to analyze per account
   viralityFormula: "current" | "shares";
   testAccountsLimit: number; // 0 = all, >0 limit accounts per run
+  followersUpdateFreqDays: number; // how often to update followers (in days)
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -20,6 +21,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   postsPerAccount: 100,
   viralityFormula: "current",
   testAccountsLimit: 0,
+  followersUpdateFreqDays: 4,
 };
 
 const SETTINGS_KEY = "default";
@@ -66,6 +68,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     viralityFormula: (value.viralityFormula as AppSettings["viralityFormula"]) ??
       DEFAULT_SETTINGS.viralityFormula,
     testAccountsLimit: value.testAccountsLimit ?? DEFAULT_SETTINGS.testAccountsLimit,
+    followersUpdateFreqDays: value.followersUpdateFreqDays ?? DEFAULT_SETTINGS.followersUpdateFreqDays,
   };
 }
 
@@ -81,6 +84,7 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     viralityFormula: payload.viralityFormula ?? current.viralityFormula,
     testAccountsLimit:
       payload.testAccountsLimit ?? current.testAccountsLimit ?? 0,
+    followersUpdateFreqDays: payload.followersUpdateFreqDays ?? current.followersUpdateFreqDays,
   };
 
   await db
