@@ -38,7 +38,7 @@ export async function executeInstagramAnalysis(mastra: any) {
   const viralityFormula = appSettings.viralityFormula || "current";
   const testAccountsLimit =
     typeof appSettings.testAccountsLimit === "number" &&
-    appSettings.testAccountsLimit > 0
+      appSettings.testAccountsLimit > 0
       ? appSettings.testAccountsLimit
       : 0;
 
@@ -54,13 +54,13 @@ export async function executeInstagramAnalysis(mastra: any) {
 
   // Step 1.5: Prioritize accounts by last check time (never checked first, then oldest)
   logger?.info("🎯 [Step1.5] Prioritizing accounts based on last check time");
-  
+
   const { prioritizedUsernames, neverChecked, oldestCheckAge } = await getAccountPrioritiesTool.execute({
     context: { allUsernames: accounts },
     mastra,
     runtimeContext,
   });
-  
+
   logger?.info("✅ [Step1.5] Accounts prioritized", {
     totalAccounts: prioritizedUsernames.length,
     neverChecked,
@@ -95,7 +95,7 @@ export async function executeInstagramAnalysis(mastra: any) {
       });
 
       accountsProcessed++;
-      
+
       // Track viral reels found for this account
       let viralReelsFoundForAccount = 0;
 
@@ -104,7 +104,7 @@ export async function executeInstagramAnalysis(mastra: any) {
         logger?.info("⏭️ [Step2] No reels found, skipping", {
           username: accountData.username,
         });
-        
+
         // Update check history even if no reels found
         await updateAccountCheckTool.execute({
           context: {
@@ -114,7 +114,7 @@ export async function executeInstagramAnalysis(mastra: any) {
           mastra,
           runtimeContext,
         });
-        
+
         continue;
       }
 
@@ -146,7 +146,7 @@ export async function executeInstagramAnalysis(mastra: any) {
       // CAROUSELS: Same logic as reels
       // MINIMUM: 100K views for any reel
       // TARGET: 1K followers → 100K+ views, 1M followers → 2M+ views
-      
+
       // Calculate progressive multiplier with smooth gradation
       // TARGET: 1K followers → 100K views, 1M+ followers → 2M views
       // IMPORTANT: Multiplier decreases as followers increase, ensuring monotonic growth
@@ -163,24 +163,24 @@ export async function executeInstagramAnalysis(mastra: any) {
         viewsMultiplier = 15; // 20K-50K: 50K×15=750K
         accountSizeCategory = "Малый (20K-50K)";
       } else if (followersCount < 100000) {
-        viewsMultiplier = 10; // 50K-100K: 100K×10=1M
+        viewsMultiplier = 8; // 50K-100K: 100K×8=800K
         accountSizeCategory = "Малый (50K-100K)";
       } else if (followersCount < 200000) {
-        viewsMultiplier = 8; // 100K-200K: 200K×8=1.6M
+        viewsMultiplier = 5; // 100K-200K: 200K×5=1M
         accountSizeCategory = "Средний (100K-200K)";
       } else if (followersCount < 500000) {
-        viewsMultiplier = 4; // 200K-500K: 500K×4=2M
+        viewsMultiplier = 2.5; // 200K-500K: 500K×2.5=1.25M
         accountSizeCategory = "Средний (200K-500K)";
       } else {
-        viewsMultiplier = 2; // 500K+: Максимальный множитель X2 для всех больших аккаунтов
+        viewsMultiplier = 1.5; // 500K+: Множитель X1.5 для всех больших аккаунтов
         accountSizeCategory = followersCount >= 1000000 ? "Мега (1M+)" : "Большой (500K-1M)";
       }
-      
+
       // Calculate minimum views
       // For accounts ≥ 500K: use X2 multiplier but with 2M floor to ensure monotonic growth
       const calculatedMinimum = followersCount * viewsMultiplier;
       let minimumViewsReel: number;
-      
+
       if (followersCount >= 500000) {
         // For big accounts (≥500K): X2 multiplier with 2M minimum
         minimumViewsReel = Math.max(2000000, calculatedMinimum);
@@ -188,12 +188,12 @@ export async function executeInstagramAnalysis(mastra: any) {
         // For smaller accounts: 100K minimum
         minimumViewsReel = Math.max(100000, calculatedMinimum);
       }
-      
+
       // Carousel engagement thresholds (MUCH LOWER than reels)
       // Example: 500K followers → 15K engagement is acceptable
       // Using ~3% of followers as baseline
       let carouselMultiplier: number;
-      
+
       if (followersCount < 10000) {
         carouselMultiplier = 0.5; // 5K → 2.5K engagement
       } else if (followersCount < 50000) {
@@ -205,7 +205,7 @@ export async function executeInstagramAnalysis(mastra: any) {
       } else {
         carouselMultiplier = 0.03; // 500K+ → 3% engagement (500K → 15K)
       }
-      
+
       const carouselCalculated = followersCount * carouselMultiplier;
       const minimumEngagementCarousel = Math.max(5000, carouselCalculated); // Minimum 5K engagement
 
@@ -317,13 +317,13 @@ export async function executeInstagramAnalysis(mastra: any) {
           }
         }
       }
-      
+
       // Update check history after processing this account
       logger?.info("📝 [Step2] Updating check history", {
         username: accountData.username,
         viralReelsFound: viralReelsFoundForAccount,
       });
-      
+
       await updateAccountCheckTool.execute({
         context: {
           username: accountData.username,
@@ -332,13 +332,13 @@ export async function executeInstagramAnalysis(mastra: any) {
         mastra,
         runtimeContext,
       });
-      
+
     } catch (error) {
       logger?.error("❌ [Step2] Error processing account", {
         accountUrl,
         error: String(error),
       });
-      
+
       // Update check history even on error (to avoid re-checking failed accounts immediately)
       try {
         const username = accountUrl.replace(/^@/, "").split("/").pop() || accountUrl;
