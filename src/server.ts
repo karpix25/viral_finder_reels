@@ -261,6 +261,50 @@ const html = `<!doctype html>
       </div>
     </div>
 
+    <h2 style="margin-top: 32px; font-size: 18px;">Коэффициенты виральности (Посты/Карусели)</h2>
+    <div class="muted" style="margin-bottom: 8px;">
+      Формула: <strong>Порог вовлеченности (Лайки+Комменты) = Подписчики × Множитель</strong>.
+    </div>
+    <div class="muted" style="margin-bottom: 16px; line-height: 1.4;">
+      Для каруселей и фото множители обычно ниже (0.05-0.5), так как реакций меньше, чем просмотров.<br>
+      Например: 1000 подписчиков * 0.5 = 500 реакций для вирусности.
+    </div>
+    
+    <div class="grid">
+      <div class="card">
+        <label for="tier1_c">1K - 5K</label>
+        <input type="number" id="tier1_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier2_c">5K - 10K</label>
+        <input type="number" id="tier2_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier3_c">10K - 20K</label>
+        <input type="number" id="tier3_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier4_c">20K - 50K</label>
+        <input type="number" id="tier4_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier5_c">50K - 100K</label>
+        <input type="number" id="tier5_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier6_c">100K - 200K</label>
+        <input type="number" id="tier6_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier7_c">200K - 500K</label>
+        <input type="number" id="tier7_c" step="0.01" />
+      </div>
+      <div class="card">
+        <label for="tier8_c">500K+</label>
+        <input type="number" id="tier8_c" step="0.01" />
+      </div>
+    </div>
+
     <div class="actions">
       <button id="save">Сохранить</button>
       <button id="test-run" class="btn-secondary">Тест: Парсинг контента</button>
@@ -285,7 +329,7 @@ const html = `<!doctype html>
     const weeklyDayCard = document.getElementById('weekly-day-card');
     const weeklyTimeCard = document.getElementById('weekly-time-card');
     
-    // Multiplier inputs
+    // Multiplier inputs (Reels)
     const t1 = document.getElementById('tier1');
     const t2 = document.getElementById('tier2');
     const t3 = document.getElementById('tier3');
@@ -294,6 +338,16 @@ const html = `<!doctype html>
     const t6 = document.getElementById('tier6');
     const t7 = document.getElementById('tier7');
     const t8 = document.getElementById('tier8');
+
+    // Multiplier inputs (Carousel)
+    const tc1 = document.getElementById('tier1_c');
+    const tc2 = document.getElementById('tier2_c');
+    const tc3 = document.getElementById('tier3_c');
+    const tc4 = document.getElementById('tier4_c');
+    const tc5 = document.getElementById('tier5_c');
+    const tc6 = document.getElementById('tier6_c');
+    const tc7 = document.getElementById('tier7_c');
+    const tc8 = document.getElementById('tier8_c');
 
     function updateVisibility() {
       const mode = modeSelect.value;
@@ -333,6 +387,16 @@ const html = `<!doctype html>
       t7.value = m.tier7_200k_500k ?? 2.5;
       t8.value = m.tier8_500k_plus ?? 1.5;
 
+      const mc = data.carouselMultipliers || {};
+      tc1.value = mc.tier1_1k_5k ?? 0.5;
+      tc2.value = mc.tier2_5k_10k ?? 0.5;
+      tc3.value = mc.tier3_10k_20k ?? 0.2;
+      tc4.value = mc.tier4_20k_50k ?? 0.2;
+      tc5.value = mc.tier5_50k_100k ?? 0.1;
+      tc6.value = mc.tier6_100k_200k ?? 0.05;
+      tc7.value = mc.tier7_200k_500k ?? 0.05;
+      tc8.value = mc.tier8_500k_plus ?? 0.03;
+
       updateVisibility();
       statusEl.textContent = 'Готово';
     }
@@ -357,6 +421,16 @@ const html = `<!doctype html>
             tier6_100k_200k: Number(t6.value),
             tier7_200k_500k: Number(t7.value),
             tier8_500k_plus: Number(t8.value),
+        },
+        carouselMultipliers: {
+            tier1_1k_5k: Number(tc1.value),
+            tier2_5k_10k: Number(tc2.value),
+            tier3_10k_20k: Number(tc3.value),
+            tier4_20k_50k: Number(tc4.value),
+            tier5_50k_100k: Number(tc5.value),
+            tier6_100k_200k: Number(tc6.value),
+            tier7_200k_500k: Number(tc7.value),
+            tier8_500k_plus: Number(tc8.value),
         }
       };
       const res = await fetch('/api/settings', {
@@ -389,6 +463,16 @@ const html = `<!doctype html>
       t6.value = m.tier6_100k_200k;
       t7.value = m.tier7_200k_500k;
       t8.value = m.tier8_500k_plus;
+
+      const mc = data.carouselMultipliers || {};
+      tc1.value = mc.tier1_1k_5k;
+      tc2.value = mc.tier2_5k_10k;
+      tc3.value = mc.tier3_10k_20k;
+      tc4.value = mc.tier4_20k_50k;
+      tc5.value = mc.tier5_50k_100k;
+      tc6.value = mc.tier6_100k_200k;
+      tc7.value = mc.tier7_200k_500k;
+      tc8.value = mc.tier8_500k_plus;
 
       updateVisibility();
       statusEl.textContent = 'Сохранено';

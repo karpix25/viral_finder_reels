@@ -23,9 +23,10 @@ export type AppSettings = {
   testAccountsLimit: number; // 0 = all, >0 limit accounts per run
   followersUpdateFreqDays: number; // how often to update followers (in days)
   viralityMultipliers: ViralityMultipliers;
+  carouselMultipliers: ViralityMultipliers;
 };
 
-const DEFAULT_MULTIPLIERS: ViralityMultipliers = {
+const DEFAULT_REELS_MULTIPLIERS: ViralityMultipliers = {
   tier1_1k_5k: 100,
   tier2_5k_10k: 50,
   tier3_10k_20k: 30,
@@ -34,6 +35,17 @@ const DEFAULT_MULTIPLIERS: ViralityMultipliers = {
   tier6_100k_200k: 5,
   tier7_200k_500k: 2.5,
   tier8_500k_plus: 1.5,
+};
+
+const DEFAULT_CAROUSEL_MULTIPLIERS: ViralityMultipliers = {
+  tier1_1k_5k: 0.5,
+  tier2_5k_10k: 0.5,
+  tier3_10k_20k: 0.2,
+  tier4_20k_50k: 0.2,
+  tier5_50k_100k: 0.1,
+  tier6_100k_200k: 0.05,
+  tier7_200k_500k: 0.05,
+  tier8_500k_plus: 0.03,
 };
 
 const DEFAULT_SETTINGS: AppSettings = {
@@ -45,7 +57,8 @@ const DEFAULT_SETTINGS: AppSettings = {
   viralityFormula: "current",
   testAccountsLimit: 0,
   followersUpdateFreqDays: 4,
-  viralityMultipliers: DEFAULT_MULTIPLIERS,
+  viralityMultipliers: DEFAULT_REELS_MULTIPLIERS,
+  carouselMultipliers: DEFAULT_CAROUSEL_MULTIPLIERS,
 };
 
 const SETTINGS_KEY = "default";
@@ -83,9 +96,14 @@ export async function getAppSettings(): Promise<AppSettings> {
   const schedulerMode =
     value.schedulerMode === "weekly" ? "weekly" : "daily";
 
-  const mergedMultipliers = {
-    ...DEFAULT_MULTIPLIERS,
+  const mergedReels = {
+    ...DEFAULT_REELS_MULTIPLIERS,
     ...(value.viralityMultipliers || {}),
+  };
+
+  const mergedCarousel = {
+    ...DEFAULT_CAROUSEL_MULTIPLIERS,
+    ...(value.carouselMultipliers || {}),
   };
 
   return {
@@ -98,7 +116,8 @@ export async function getAppSettings(): Promise<AppSettings> {
       DEFAULT_SETTINGS.viralityFormula,
     testAccountsLimit: value.testAccountsLimit ?? DEFAULT_SETTINGS.testAccountsLimit,
     followersUpdateFreqDays: value.followersUpdateFreqDays ?? DEFAULT_SETTINGS.followersUpdateFreqDays,
-    viralityMultipliers: mergedMultipliers,
+    viralityMultipliers: mergedReels,
+    carouselMultipliers: mergedCarousel,
   };
 }
 
@@ -107,9 +126,14 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
   const current = await getAppSettings();
 
   // Merge multipliers if provided partially
-  const nextMultipliers = {
+  const nextReels = {
     ...current.viralityMultipliers,
     ...(payload.viralityMultipliers || {}),
+  };
+
+  const nextCarousel = {
+    ...current.carouselMultipliers,
+    ...(payload.carouselMultipliers || {}),
   };
 
   const next: AppSettings = {
@@ -122,7 +146,8 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     testAccountsLimit:
       payload.testAccountsLimit ?? current.testAccountsLimit ?? 0,
     followersUpdateFreqDays: payload.followersUpdateFreqDays ?? current.followersUpdateFreqDays,
-    viralityMultipliers: nextMultipliers,
+    viralityMultipliers: nextReels,
+    carouselMultipliers: nextCarousel,
   };
 
   await db

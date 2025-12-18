@@ -194,16 +194,24 @@ export async function executeInstagramAnalysis(mastra: any) {
       // Using ~3% of followers as baseline
       let carouselMultiplier: number;
 
-      if (followersCount < 10000) {
-        carouselMultiplier = 0.5; // 5K → 2.5K engagement
+      const mCarousel = appSettings.carouselMultipliers;
+
+      if (followersCount < 5000) {
+        carouselMultiplier = mCarousel.tier1_1k_5k; // 1K-5K
+      } else if (followersCount < 10000) {
+        carouselMultiplier = mCarousel.tier2_5k_10k; // 5K-10K
+      } else if (followersCount < 20000) {
+        carouselMultiplier = mCarousel.tier3_10k_20k; // 10K-20K
       } else if (followersCount < 50000) {
-        carouselMultiplier = 0.2; // 30K → 6K engagement
+        carouselMultiplier = mCarousel.tier4_20k_50k; // 20K-50K
       } else if (followersCount < 100000) {
-        carouselMultiplier = 0.1; // 80K → 8K engagement
+        carouselMultiplier = mCarousel.tier5_50k_100k; // 50K-100K
+      } else if (followersCount < 200000) {
+        carouselMultiplier = mCarousel.tier6_100k_200k; // 100K-200K
       } else if (followersCount < 500000) {
-        carouselMultiplier = 0.05; // 300K → 15K engagement
+        carouselMultiplier = mCarousel.tier7_200k_500k; // 200K-500K
       } else {
-        carouselMultiplier = 0.03; // 500K+ → 3% engagement (500K → 15K)
+        carouselMultiplier = mCarousel.tier8_500k_plus; // 500K+
       }
 
       const carouselCalculated = followersCount * carouselMultiplier;
