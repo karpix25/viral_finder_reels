@@ -1,4 +1,4 @@
-import { db, pool } from "../storage/postgres.js";
+import { db, pool } from "../storage/index.js";
 import { pgTable, serial, text, integer, timestamp, boolean, varchar, jsonb } from "drizzle-orm/pg-core";
 import { eq, desc } from "drizzle-orm";
 
