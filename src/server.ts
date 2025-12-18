@@ -169,12 +169,12 @@ const html = `<!doctype html>
         </select>
         <div class="muted">Режим запуска парсинга рилс/каруселей</div>
       </div>
-      <div class="card">
+      <div class="card" id="daily-card">
         <label for="dailyTime">Время (UTC)</label>
         <input type="time" id="dailyTime" />
         <div class="muted">Используется для ежедневного запуска</div>
       </div>
-      <div class="card">
+      <div class="card" id="weekly-day-card">
         <label for="weeklyDay">День недели</label>
         <select id="weeklyDay">
           <option value="0">Воскресенье</option>
@@ -187,7 +187,7 @@ const html = `<!doctype html>
         </select>
         <div class="muted">Для еженедельного режима</div>
       </div>
-      <div class="card">
+      <div class="card" id="weekly-time-card">
         <label for="weeklyTime">Время (UTC) — неделя</label>
         <input type="time" id="weeklyTime" />
         <div class="muted">Используется, если выбрана неделя</div>
@@ -280,6 +280,11 @@ const html = `<!doctype html>
     const formulaSelect = document.getElementById('viralityFormula');
     const followersFreqInput = document.getElementById('followersFreq');
     
+    // Cards for visibility toggling
+    const dailyCard = document.getElementById('daily-card');
+    const weeklyDayCard = document.getElementById('weekly-day-card');
+    const weeklyTimeCard = document.getElementById('weekly-time-card');
+    
     // Multiplier inputs
     const t1 = document.getElementById('tier1');
     const t2 = document.getElementById('tier2');
@@ -289,6 +294,21 @@ const html = `<!doctype html>
     const t6 = document.getElementById('tier6');
     const t7 = document.getElementById('tier7');
     const t8 = document.getElementById('tier8');
+
+    function updateVisibility() {
+      const mode = modeSelect.value;
+      if (mode === 'daily') {
+        dailyCard.style.display = 'block';
+        weeklyDayCard.style.display = 'none';
+        weeklyTimeCard.style.display = 'none';
+      } else {
+        dailyCard.style.display = 'none';
+        weeklyDayCard.style.display = 'block';
+        weeklyTimeCard.style.display = 'block';
+      }
+    }
+
+    modeSelect.addEventListener('change', updateVisibility);
 
     async function loadSettings() {
       statusEl.textContent = 'Загружаю...';
@@ -313,6 +333,7 @@ const html = `<!doctype html>
       t7.value = m.tier7_200k_500k ?? 2.5;
       t8.value = m.tier8_500k_plus ?? 1.5;
 
+      updateVisibility();
       statusEl.textContent = 'Готово';
     }
 
@@ -369,6 +390,7 @@ const html = `<!doctype html>
       t7.value = m.tier7_200k_500k;
       t8.value = m.tier8_500k_plus;
 
+      updateVisibility();
       statusEl.textContent = 'Сохранено';
     }
 
