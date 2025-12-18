@@ -218,7 +218,13 @@ const html = `<!doctype html>
     </div>
     
     <h2 style="margin-top: 32px; font-size: 18px;">Коэффициенты виральности (Множители)</h2>
-    <div class="muted" style="margin-bottom: 16px;">Порог просмотров = Подписчики * Множитель. Чем меньше число, тем легче попасть в "вирусное".</div>
+    <div class="muted" style="margin-bottom: 8px;">
+      Формула: <strong>Порог просмотров = Подписчики × Множитель</strong>.
+    </div>
+    <div class="muted" style="margin-bottom: 16px; line-height: 1.4;">
+      Например, если у аккаунта 1000 подписчиков и множитель 100, то вирусным считается рилс с 100,000+ просмотров.<br>
+      Чем <em>меньше</em> множитель, тем <em>легче</em> видео попасть в список вирусных.
+    </div>
     
     <div class="grid">
       <div class="card">

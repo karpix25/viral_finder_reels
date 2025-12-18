@@ -283,6 +283,8 @@ export async function executeInstagramAnalysis(mastra: any) {
 
           // Send immediately to Telegram
           try {
+            const currentGrowthMultiplier = averageViews > 0 ? reel.viewCount / averageViews : 0;
+
             await sendSingleViralReelTool.execute({
               context: {
                 username: accountData.username,
@@ -293,8 +295,8 @@ export async function executeInstagramAnalysis(mastra: any) {
                 likeCount: reel.likeCount,
                 commentCount: reel.commentCount,
                 ageInDays,
-                growthMultiplier: 0, // Not used in new criteria
-                averageViews: 0, // Not used in new criteria
+                growthMultiplier: currentGrowthMultiplier,
+                averageViews: averageViews,
                 followersCount: accountData.followersCount,
               },
               mastra,
