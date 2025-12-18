@@ -146,6 +146,36 @@ const html = `<!doctype html>
       gap: 10px;
       align-items: center;
     }
+    
+    /* Tabs */
+    .tabs { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
+    .tab { cursor: pointer; padding: 8px 16px; font-weight: 500; color: var(--muted); border-radius: 8px; transition: 0.2s; }
+    .tab.active { background: #fff; color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+    
+    /* View Visibility */
+    .view-section { display: none; }
+    .view-section.active { display: block; animation: fadeIn 0.3s ease; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Feed Styles */
+    .feed-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+    .feed-card {
+      border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden;
+      display: flex; flex-direction: column; background: #fff; transition: 0.2s;
+    }
+    .feed-card:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(0,0,0,0.05); }
+    .feed-thumb { height: 280px; background: #f3f4f6; background-size: cover; background-position: center; position: relative; }
+    .feed-badge {
+        position: absolute; top: 10px; right: 10px;
+        background: rgba(0,0,0,0.7); color: #fff; padding: 4px 8px;
+        border-radius: 6px; font-size: 11px; font-weight: bold; backdrop-filter: blur(4px);
+    }
+    .feed-info { padding: 12px; flex: 1; display: flex; flex-direction: column; gap: 6px; }
+    .feed-user { font-weight: 600; font-size: 14px; color: var(--text); }
+    .feed-stats { display: flex; justify-content: space-between; font-size: 13px; color: var(--muted); }
+    .feed-reason { font-size: 11px; color: var(--muted); margin-top: 8px; line-height: 1.3; border-top: 1px solid #f3f4f6; padding-top: 6px; }
+    .feed-link { display: block; margin-top: auto; text-align: center; background: #f9fafb; padding: 10px; color: var(--accent); text-decoration: none; font-size: 13px; font-weight: 600; border-top: 1px solid #e5e7eb; }
+    .feed-link:hover { background: #f0f9ff; }
   </style>
 </head>
 <body>
@@ -153,14 +183,21 @@ const html = `<!doctype html>
     <header>
       <div>
         <div class="pill">Insta Viral Control</div>
-        <h1>Настройки парсера</h1>
+        <h1>Dashboard</h1>
       </div>
       <div class="header-actions">
-        <button id="refresh">Обновить</button>
-        <button id="test-run-top" class="btn-secondary">Тестовый запуск</button>
+        <button id="refresh-feed" class="btn-secondary" style="padding: 8px 16px; font-size: 13px; display: none;">🔄 Обновить ленту</button>
       </div>
     </header>
-    <div class="grid">
+
+    <div class="tabs">
+        <div class="tab active" onclick="switchTab('settings')">Настройки</div>
+        <div class="tab" onclick="switchTab('feed')">Лента (Viral Feed)</div>
+    </div>
+
+    <!-- SETTINGS VIEW -->
+    <div id="settings-view" class="view-section active">
+        <div class="grid">
       <div class="card">
         <label for="mode">Частота (Сбор контента)</label>
         <select id="mode">
@@ -311,6 +348,15 @@ const html = `<!doctype html>
       <button id="test-followers-update" class="btn-warning">Тест: Обновить подписчиков</button>
       <span class="status" id="status"></span>
     </div>
+  </div>
+
+  <!-- FEED VIEW -->
+  <div id="feed-view" class="view-section">
+      <div id="feed-container" class="feed-grid">
+          <div class="muted" style="text-align:center; grid-column: 1/-1;">Нажмите "Обновить ленту", чтобы загрузить данные</div>
+      </div>
+  </div>
+
   </div>
 
   <script>
@@ -503,11 +549,81 @@ const html = `<!doctype html>
     }
 
     document.getElementById('save').addEventListener('click', saveSettings);
-    document.getElementById('refresh').addEventListener('click', loadSettings);
+    // document.getElementById('refresh').addEventListener('click', loadSettings); // Removed
     document.getElementById('test-run').addEventListener('click', runTest);
-    document.getElementById('test-run-top').addEventListener('click', runTest);
+    // document.getElementById('test-run-top').addEventListener('click', runTest); // Removed
     document.getElementById('test-followers-update').addEventListener('click', runFollowersTest);
     
+    // TABS & FEED LOGIC
+    const refreshBtn = document.getElementById('refresh-feed');
+    refreshBtn.addEventListener('click', loadFeed);
+
+    window.switchTab = function(tabName) {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        if (tabName === 'settings') document.querySelectorAll('.tab')[0].classList.add('active');
+        if (tabName === 'feed') document.querySelectorAll('.tab')[1].classList.add('active');
+
+        document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+        if (tabName === 'settings') {
+            document.getElementById('settings-view').classList.add('active');
+            refreshBtn.style.display = 'none';
+        }
+        if (tabName === 'feed') {
+            document.getElementById('feed-view').classList.add('active');
+            refreshBtn.style.display = 'block';
+            loadFeed();
+        }
+    };
+
+    async function loadFeed() {
+        const container = document.getElementById('feed-container');
+        container.innerHTML = '<div class="muted">Загрузка...</div>';
+        
+        try {
+            const res = await fetch('/api/feed');
+            const posts = await res.json();
+            
+            if (!posts || posts.length === 0) {
+                container.innerHTML = '<div class="muted" style="grid-column: 1/-1; text-align: center;">Пока пусто. Запустите парсинг, чтобы найти вирусный контент.</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            posts.forEach(post => {
+                const growth = post.viralityScore ? \`🚀 \${parseFloat(post.viralityScore).toFixed(1)}x\` : '';
+                const views = post.viewCount ? post.viewCount.toLocaleString() : '-';
+                const likes = post.likeCount ? post.likeCount.toLocaleString() : '-';
+                const comments = post.commentCount ? post.commentCount.toLocaleString() : '-';
+                const date = new Date(post.foundAt || post.takenAt).toLocaleDateString();
+                const thumb = post.thumbnailUrl || '';
+                
+                const card = document.createElement('div');
+                card.className = 'feed-card';
+                card.innerHTML = \`
+                    <div class="feed-thumb" style="background-image: url('\${thumb}'); background-color: #eee;">
+                        \${growth ? \`<div class="feed-badge">\${growth}</div>\` : ''}
+                    </div>
+                    <div class="feed-info">
+                        <div class="feed-user">\${post.username}</div>
+                        <div class="feed-stats">
+                            <span>👁 \${views}</span>
+                            <span>❤ \${likes}</span>
+                            <span>💬 \${comments}</span>
+                        </div>
+                        <div class="feed-reason">\${post.viralityReason || ''}</div>
+                        <div class="muted" style="font-size: 10px; margin-top: auto;">\${date}</div>
+                    </div>
+                    <a href="\${post.postUrl}" target="_blank" class="feed-link">Открыть в Instagram</a>
+                \`;
+                container.appendChild(card);
+            });
+
+        } catch (err) {
+            container.innerHTML = '<div class="muted" style="color:red">Ошибка загрузки ленты</div>';
+            console.error(err);
+        }
+    }
+
     loadSettings();
   </script>
 </body>
@@ -562,6 +678,17 @@ app.post("/api/settings", async (c) => {
   } catch (err: any) {
     console.error("Failed to save settings", err);
     return c.json({ error: "Failed to save settings", details: String(err) }, 500);
+  }
+});
+
+app.get("/api/feed", async (c) => {
+  try {
+    const { getViralPosts } = await import("./mastra/services/viralPosts");
+    const posts = await getViralPosts(100, 0);
+    return c.json(posts);
+  } catch (err: any) {
+    console.error("Failed to fetch feed", err);
+    return c.json({ error: "Failed to fetch feed" }, 500);
   }
 });
 

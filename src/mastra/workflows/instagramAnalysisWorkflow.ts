@@ -311,15 +311,35 @@ export async function executeInstagramAnalysis(mastra: any) {
               runtimeContext,
             });
 
+            // Save to DB for Feed
+            try {
+              const { saveViralPost } = await import("../services/viralPosts");
+              await saveViralPost({
+                username: accountData.username,
+                postUrl: reel.url,
+                contentType: reel.type,
+                viewCount: reel.viewCount,
+                likeCount: reel.likeCount,
+                commentCount: reel.commentCount,
+                takenAt: new Date(reel.timestamp * 1000),
+                viralityScore: currentGrowthMultiplier,
+                viralityReason: viralityReason,
+                thumbnailUrl: (reel as any).displayUrl || (reel as any).thumbnailUrl || (reel as any).imageUrl || "",
+              });
+              logger?.info("💾 [Step2] Saved viral post to DB", { url: reel.url });
+            } catch (dbErr) {
+              logger?.error("❌ [Step2] Failed to save viral post to DB", { error: String(dbErr) });
+            }
+
             totalViralReelsSent++;
             viralReelsFoundForAccount++;
 
-            logger?.info("✅ [Step2] Viral reel sent to Telegram", {
+            logger?.info("✅ [Step2] Viral reel processed", {
               username: accountData.username,
               reelUrl: reel.url,
             });
           } catch (error) {
-            logger?.error("❌ [Step2] Failed to send viral reel", {
+            logger?.error("❌ [Step2] Failed to process viral reel", {
               username: accountData.username,
               reelUrl: reel.url,
               error: String(error),
