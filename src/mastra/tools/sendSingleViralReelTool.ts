@@ -129,7 +129,7 @@ export const sendSingleViralReelTool = createTool({
 📈 <b>Анализ вирусности:</b>
 ⏱ Возраст: ${ageInDays} дней
 🚀 Рост: ${growthMultiplier.toFixed(1)}x от среднего
-📊 Средний показатель: ${averageViews.toLocaleString()} просмотров
+📊 Средний показатель: ${Math.round(averageViews).toLocaleString()} просмотров
 
 ${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
 
