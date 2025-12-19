@@ -123,17 +123,22 @@ export async function executeInstagramAnalysis(mastra: any) {
       // Limit number of posts per account
       const reelsToAnalyze = accountData.reels.slice(0, postsPerAccount);
 
-      // Calculate average views for this account
-      const totalViews = reelsToAnalyze.reduce(
+      // Calculate average views for this account (only counting posts with views > 0, excluding carousels)
+      const postsWithViews = reelsToAnalyze.filter(r => r.viewCount > 0);
+
+      const totalViews = postsWithViews.reduce(
         (sum, reel) => sum + reel.viewCount,
         0,
       );
+
+      // Use postsWithViews.length as denominator to avoid diluting average with 0-view carousels
       const averageViews =
-        reelsToAnalyze.length > 0 ? totalViews / reelsToAnalyze.length : 0;
+        postsWithViews.length > 0 ? totalViews / postsWithViews.length : 0;
 
       logger?.info("📊 [Step2] Analyzing reels and carousels for virality", {
         username: accountData.username,
         totalPosts: reelsToAnalyze.length,
+        postsWithViews: postsWithViews.length,
         averageViews,
         postsPerAccount,
       });
