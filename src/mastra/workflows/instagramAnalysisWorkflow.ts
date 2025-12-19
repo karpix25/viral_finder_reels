@@ -295,7 +295,7 @@ export async function executeInstagramAnalysis(mastra: any) {
           try {
             const currentGrowthMultiplier = averageViews > 0 ? reel.viewCount / averageViews : 0;
 
-            await sendSingleViralReelTool.execute({
+            const result = await sendSingleViralReelTool.execute({
               context: {
                 username: accountData.username,
                 reelUrl: reel.url,
@@ -333,13 +333,21 @@ export async function executeInstagramAnalysis(mastra: any) {
               logger?.error("❌ [Step2] Failed to save viral post to DB", { error: String(dbErr) });
             }
 
-            totalViralReelsSent++;
+            if (result.success) {
+              totalViralReelsSent++;
+              logger?.info("✅ [Step2] New viral reel sent to Telegram", {
+                username: accountData.username,
+                reelUrl: reel.url,
+              });
+            } else {
+              logger?.info("⏭️ [Step2] Viral reel already sent, skipped notification", {
+                username: accountData.username,
+                reelUrl: reel.url,
+              });
+            }
+
             viralReelsFoundForAccount++;
 
-            logger?.info("✅ [Step2] Viral reel processed", {
-              username: accountData.username,
-              reelUrl: reel.url,
-            });
           } catch (error) {
             logger?.error("❌ [Step2] Failed to process viral reel", {
               username: accountData.username,
