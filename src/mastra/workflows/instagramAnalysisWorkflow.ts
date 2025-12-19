@@ -123,24 +123,23 @@ export async function executeInstagramAnalysis(mastra: any) {
       // Limit number of posts per account
       const reelsToAnalyze = accountData.reels.slice(0, postsPerAccount);
 
-      // Calculate average views for this account (only counting posts with views > 0, excluding carousels)
-      const postsWithViews = reelsToAnalyze.filter(r => r.viewCount > 0);
+      // Calculate average metrics separately for Reels and Carousels
+      // 1. Average Views for Reels/Videos
+      const videoPosts = reelsToAnalyze.filter(r => r.type === "Reel" || r.type === "Video");
+      const totalVideoViews = videoPosts.reduce((sum, reel) => sum + reel.viewCount, 0);
+      const avgReelViews = videoPosts.length > 0 ? totalVideoViews / videoPosts.length : 0;
 
-      const totalViews = postsWithViews.reduce(
-        (sum, reel) => sum + reel.viewCount,
-        0,
-      );
+      // 2. Average Engagement for Carousels
+      const carouselPosts = reelsToAnalyze.filter(r => r.type === "Sidecar");
+      const totalCarouselEngagement = carouselPosts.reduce((sum, reel) => sum + reel.likeCount + reel.commentCount, 0);
+      const avgCarouselEngagement = carouselPosts.length > 0 ? totalCarouselEngagement / carouselPosts.length : 0;
 
-      // Use postsWithViews.length as denominator to avoid diluting average with 0-view carousels
-      const averageViews =
-        postsWithViews.length > 0 ? totalViews / postsWithViews.length : 0;
-
-      logger?.info("📊 [Step2] Analyzing reels and carousels for virality", {
+      logger?.info("📊 [Step2] Analyzed separate averages", {
         username: accountData.username,
-        totalPosts: reelsToAnalyze.length,
-        postsWithViews: postsWithViews.length,
-        averageViews,
-        postsPerAccount,
+        avgReelViews,
+        avgCarouselEngagement,
+        videoCount: videoPosts.length,
+        carouselCount: carouselPosts.length
       });
 
       // Determine adaptive criteria based on account size
