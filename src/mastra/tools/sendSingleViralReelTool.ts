@@ -56,58 +56,50 @@ export const sendSingleViralReelTool = createTool({
       followersCount,
     } = context;
 
-    logger?.info("🚀 [SendSingleViral] Checking if reel was already sent", {
+    logger?.info("🚀 [SendSingleViral] Processing viral reel", {
       username,
       reelUrl,
     });
 
     await ensureSentViralReelsTable();
 
-    // Check if reel was already sent
-    const existingReel = await db
-      .select()
-      .from(sentViralReels)
-      .where(eq(sentViralReels.reelUrl, reelUrl))
-      .limit(1);
-
-    if (existingReel.length > 0) {
-      logger?.info("⏭️ [SendSingleViral] Reel already sent, skipping", {
+    // 1. ATTEMPT TO LOCK (INSERT) FIRST
+    // This prevents race conditions where two processes check simultaneously
+    try {
+      await db.insert(sentViralReels).values({
         reelUrl,
-        sentAt: existingReel[0].sentAt,
+        username,
       });
-      return {
-        success: false,
-        messageId: undefined,
-      };
+      logger?.info("🔒 [SendSingleViral] Reel locked (inserted in DB)", { reelUrl });
+    } catch (dbError: any) {
+      // Check for unique constraint violation (Postgres code 23505)
+      if (dbError.code === '23505' || String(dbError).includes('unique constraint')) {
+        logger?.info("⏭️ [SendSingleViral] Reel already sent (lock failed), skipping", {
+          reelUrl,
+        });
+        return {
+          success: false,
+          messageId: undefined,
+        };
+      }
+      // Re-throw other DB errors
+      throw dbError;
     }
 
-    logger?.info("🚀 [SendSingleViral] Sending viral reel to Telegram", {
-      username,
-      reelUrl,
-    });
-
+    // 2. PREPARE MESSAGE
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    // Viral posts go to TELEGRAM_CHAT_ID (References chat) WITHOUT thread
     const chatId = process.env.TELEGRAM_CHAT_ID;
 
-    if (!botToken) {
-      throw new Error("TELEGRAM_BOT_TOKEN is not set");
-    }
-
-    if (!chatId) {
-      throw new Error("TELEGRAM_CHAT_ID is not set");
+    if (!botToken || !chatId) {
+      // Rollback lock if config missing
+      await db.delete(sentViralReels).where(eq(sentViralReels.reelUrl, reelUrl));
+      throw new Error("TELEGRAM_BOT_TOKEN or TELEGRAM_CHAT_ID is not set");
     }
 
     const bot = new Telegraf(botToken);
 
-    logger?.info("📝 [SendSingleViral] Telegram settings", {
-      chatId,
-      thread: "основной чат (без ветки)",
-    });
-
     // Escape HTML characters in caption
     const escapeHtml = (text: string) => {
-      // Normalize to NFC to avoid Telegram UTF-8 errors, then escape HTML
       const normalized = text.normalize("NFC");
       return normalized
         .replace(/&/g, "&amp;")
@@ -118,8 +110,7 @@ export const sendSingleViralReelTool = createTool({
     const captionText = caption
       ? escapeHtml(caption.slice(0, 100) + (caption.length > 100 ? "..." : ""))
       : "";
-    
-    // Determine content emoji and name
+
     const contentEmoji = contentType === "Sidecar" ? "🖼" : "🎬";
     const contentName = contentType === "Sidecar" ? "КАРУСЕЛЬ" : "РИЛС";
 
@@ -145,8 +136,8 @@ ${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
 <i>⚠️ Данные могут быть не актуальны, проверяйте на Instagram</i>
 `.trim();
 
+    // 3. SEND MESSAGE
     try {
-      // Send to main chat without thread ID
       const result = await bot.telegram.sendMessage(chatId, message, {
         parse_mode: "HTML",
       });
@@ -155,24 +146,24 @@ ${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
         messageId: result.message_id,
       });
 
-      // Save sent reel to database
-      await db.insert(sentViralReels).values({
-        reelUrl,
-        username,
-      });
-
-      logger?.info("✅ [SendSingleViral] Reel saved to database", {
-        reelUrl,
-      });
-
       return {
         success: true,
         messageId: result.message_id,
       };
+
     } catch (error) {
-      logger?.error("❌ [SendSingleViral] Failed to send message", {
+      logger?.error("❌ [SendSingleViral] Failed to send message, rolling back DB lock", {
         error: String(error),
       });
+
+      // 4. ROLLBACK ON FAILURE
+      // If sending failed, delete the record so we can try again later
+      try {
+        await db.delete(sentViralReels).where(eq(sentViralReels.reelUrl, reelUrl));
+        logger?.info("↺ [SendSingleViral] DB lock released (rollback)", { reelUrl });
+      } catch (rollbackError) {
+        logger?.error("❌ [SendSingleViral] CRITICAL: Failed to rollback DB lock", { error: String(rollbackError) });
+      }
 
       throw error;
     }
