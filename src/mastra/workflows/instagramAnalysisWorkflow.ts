@@ -345,7 +345,7 @@ export async function executeInstagramAnalysis(mastra: any) {
                 likeCount: reel.likeCount,
                 commentCount: reel.commentCount,
                 takenAt: new Date(reel.timestamp),
-                viralityScore: currentGrowthMultiplier,
+                viralityScore: growthMultiplier,
                 viralityReason: viralityReason,
                 thumbnailUrl: (reel as any).displayUrl || (reel as any).thumbnailUrl || (reel as any).imageUrl || "",
               });
