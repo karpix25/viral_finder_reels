@@ -257,14 +257,32 @@ export async function executeInstagramAnalysis(mastra: any) {
         let isViral = false;
         let viralityReason = "";
 
+        let growthMultiplier = 0;
+        let metricBenchmark = 0;
+        let benchmarkLabel = "просмотров";
+
         if (isCarousel) {
-          // CAROUSELS: Only engagement-based (no viewCount available in API)
+          // CAROUSELS: Only engagement-based
+          metricBenchmark = avgCarouselEngagement;
+          benchmarkLabel = "вовлеченности (likes+comm)";
+
+          if (metricBenchmark > 0) {
+            growthMultiplier = engagement / metricBenchmark;
+          }
+
           if (engagement >= minimumEngagementCarousel) {
             isViral = true;
             viralityReason = `Engagement: ${engagement.toLocaleString()} (${reel.likeCount.toLocaleString()} likes + ${reel.commentCount.toLocaleString()} comments) >= ${minimumEngagementCarousel.toLocaleString()} [Carousel]`;
           }
         } else {
-          // REELS/VIDEOS: Absolute views threshold
+          // REELS/VIDEOS: View-based
+          metricBenchmark = avgReelViews;
+          benchmarkLabel = "просмотров";
+
+          if (metricBenchmark > 0) {
+            growthMultiplier = reel.viewCount > 0 ? reel.viewCount / metricBenchmark : 0;
+          }
+
           if (reel.viewCount > 0 && reel.viewCount >= minimumViewsReel) {
             isViral = true;
             viralityReason = `Views: ${reel.viewCount.toLocaleString()} >= ${minimumViewsReel.toLocaleString()} [Reel]`;
@@ -298,8 +316,6 @@ export async function executeInstagramAnalysis(mastra: any) {
 
           // Send immediately to Telegram
           try {
-            const currentGrowthMultiplier = averageViews > 0 ? reel.viewCount / averageViews : 0;
-
             const result = await sendSingleViralReelTool.execute({
               context: {
                 username: accountData.username,
@@ -310,9 +326,10 @@ export async function executeInstagramAnalysis(mastra: any) {
                 likeCount: reel.likeCount,
                 commentCount: reel.commentCount,
                 ageInDays,
-                growthMultiplier: currentGrowthMultiplier,
-                averageViews: averageViews,
+                growthMultiplier: growthMultiplier,
+                averageViews: metricBenchmark,
                 followersCount: accountData.followersCount,
+                benchmarkLabel: benchmarkLabel,
               },
               mastra,
               runtimeContext,
