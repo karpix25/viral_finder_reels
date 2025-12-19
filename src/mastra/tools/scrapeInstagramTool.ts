@@ -57,6 +57,13 @@ export const scrapeInstagramTool = createTool({
 
     const reels: any[] = [];
     let followersCount = await getFollowerCountFn();
+
+    if (followersCount > 0) {
+      logger?.info("✅ [ScrapeInstagram] Using follower count from DB", { followersCount });
+    } else {
+      logger?.info("ℹ️ [ScrapeInstagram] Follower count missing or 0 in DB, will attempt to extract from posts");
+    }
+
     let paginationToken: string | undefined;
     const maxPages = 10; // safety cap
     let pageCount = 0;
