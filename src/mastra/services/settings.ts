@@ -24,6 +24,7 @@ export type AppSettings = {
   followersUpdateFreqDays: number; // how often to update followers (in days)
   viralityMultipliers: ViralityMultipliers;
   carouselMultipliers: ViralityMultipliers;
+  maxPostAgeDays: number; // max age of posts to analyze in days
 };
 
 const DEFAULT_REELS_MULTIPLIERS: ViralityMultipliers = {
@@ -59,6 +60,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   followersUpdateFreqDays: 4,
   viralityMultipliers: DEFAULT_REELS_MULTIPLIERS,
   carouselMultipliers: DEFAULT_CAROUSEL_MULTIPLIERS,
+  maxPostAgeDays: 30,
 };
 
 const SETTINGS_KEY = "default";
@@ -118,6 +120,7 @@ export async function getAppSettings(): Promise<AppSettings> {
     followersUpdateFreqDays: value.followersUpdateFreqDays ?? DEFAULT_SETTINGS.followersUpdateFreqDays,
     viralityMultipliers: mergedReels,
     carouselMultipliers: mergedCarousel,
+    maxPostAgeDays: value.maxPostAgeDays ?? DEFAULT_SETTINGS.maxPostAgeDays,
   };
 }
 
@@ -148,6 +151,7 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     followersUpdateFreqDays: payload.followersUpdateFreqDays ?? current.followersUpdateFreqDays,
     viralityMultipliers: nextReels,
     carouselMultipliers: nextCarousel,
+    maxPostAgeDays: payload.maxPostAgeDays ?? current.maxPostAgeDays,
   };
 
   await db

@@ -36,6 +36,7 @@ export async function executeInstagramAnalysis(mastra: any) {
   const appSettings = await getAppSettings();
   const postsPerAccount = Math.max(1, appSettings.postsPerAccount || 100);
   const viralityFormula = appSettings.viralityFormula || "current";
+  const maxPostAgeDays = appSettings.maxPostAgeDays || 30;
   const testAccountsLimit =
     typeof appSettings.testAccountsLimit === "number" &&
       appSettings.testAccountsLimit > 0
@@ -50,6 +51,7 @@ export async function executeInstagramAnalysis(mastra: any) {
     postsPerAccount,
     viralityFormula,
     testAccountsLimit,
+    maxPostAgeDays,
   });
 
   // Step 1.5: Prioritize accounts by last check time (never checked first, then oldest)
@@ -236,8 +238,8 @@ export async function executeInstagramAnalysis(mastra: any) {
           (now.getTime() - reelDate.getTime()) / (1000 * 60 * 60 * 24),
         );
 
-        // Skip if older than 60 days
-        if (ageInDays > 60) {
+        // Skip if older than configured days
+        if (ageInDays > maxPostAgeDays) {
           continue;
         }
 

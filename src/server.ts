@@ -252,6 +252,11 @@ const html = `<!doctype html>
         <input type="number" id="followersFreq" min="1" max="30" />
         <div class="muted">Как часто обновлять кол-во подписчиков (в днях). Например: 4</div>
       </div>
+      <div class="card">
+        <label for="maxPostAgeDays">Возраст поста (дней)</label>
+        <input type="number" id="maxPostAgeDays" min="1" max="365" />
+        <div class="muted">Фильтр новизны: анализировать только посты не старше X дней (например, 30).</div>
+      </div>
     </div>
     
     <h2 style="margin-top: 32px; font-size: 18px;">Коэффициенты виральности (Множители)</h2>
@@ -422,6 +427,7 @@ const html = `<!doctype html>
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       followersFreqInput.value = data.followersUpdateFreqDays ?? 4;
+      document.getElementById('maxPostAgeDays').value = data.maxPostAgeDays ?? 30;
       
       const m = data.viralityMultipliers || {};
       t1.value = m.tier1_1k_5k ?? 100;
@@ -458,6 +464,7 @@ const html = `<!doctype html>
         testAccountsLimit: Number(testAccountsInput.value),
         viralityFormula: formulaSelect.value,
         followersUpdateFreqDays: Number(followersFreqInput.value),
+        maxPostAgeDays: Number(document.getElementById('maxPostAgeDays').value),
         viralityMultipliers: {
             tier1_1k_5k: Number(t1.value),
             tier2_5k_10k: Number(t2.value),
@@ -499,6 +506,7 @@ const html = `<!doctype html>
       testAccountsInput.value = data.testAccountsLimit ?? 0;
       formulaSelect.value = data.viralityFormula;
       followersFreqInput.value = data.followersUpdateFreqDays;
+      document.getElementById('maxPostAgeDays').value = data.maxPostAgeDays;
       
       const m = data.viralityMultipliers || {};
       t1.value = m.tier1_1k_5k;
@@ -658,6 +666,7 @@ app.post("/api/settings", async (c) => {
     const testAccountsLimit = Math.min(10, Math.max(0, Number(body.testAccountsLimit || 0)));
     const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
     const followersUpdateFreqDays = Math.max(1, Number(body.followersUpdateFreqDays || 4));
+    const maxPostAgeDays = Math.max(1, Number(body.maxPostAgeDays || 30));
 
     const viralityMultipliers = body.viralityMultipliers || {};
 
@@ -670,6 +679,7 @@ app.post("/api/settings", async (c) => {
       testAccountsLimit,
       viralityFormula,
       followersUpdateFreqDays,
+      maxPostAgeDays,
       viralityMultipliers,
     });
 
