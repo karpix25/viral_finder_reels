@@ -35,6 +35,7 @@ export const sendSingleViralReelTool = createTool({
     growthMultiplier: z.number(),
     averageViews: z.number(),
     followersCount: z.number(),
+    benchmarkLabel: z.string().optional(),
   }),
   outputSchema: z.object({
     success: z.boolean(),
@@ -54,6 +55,7 @@ export const sendSingleViralReelTool = createTool({
       growthMultiplier,
       averageViews,
       followersCount,
+      benchmarkLabel = "просмотров",
     } = context;
 
     logger?.info("🚀 [SendSingleViral] Processing viral reel", {
@@ -129,7 +131,7 @@ export const sendSingleViralReelTool = createTool({
 📈 <b>Анализ вирусности:</b>
 ⏱ Возраст: ${ageInDays} дней
 🚀 Рост: ${growthMultiplier.toFixed(1)}x от среднего
-📊 Средний показатель: ${Math.round(averageViews).toLocaleString()} просмотров
+📊 Средний показатель: ${Math.round(averageViews).toLocaleString()} ${benchmarkLabel}
 
 ${captionText ? `📝 <b>Описание:</b> ${captionText}` : ""}
 
