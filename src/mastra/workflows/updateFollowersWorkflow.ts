@@ -6,12 +6,28 @@ import { fetchProfileStatsTool } from "../tools/fetchProfileStatsTool.js";
 
 const runtimeContext = new RuntimeContext();
 
-export async function executeFollowerUpdate(mastra: any) {
-    const logger = mastra?.getLogger();
-    logger?.info("🚀 [Workflow] Starting Instagram follower update - processing ALL accounts");
+// Optional input type for direct invocation
+type FollowerUpdateInput = {
+    targetUsernames?: string[];
+};
 
-    // Step 1: Get ALL accounts from DB
-    const accounts = await getAllInstagramAccounts();
+export async function executeFollowerUpdate(mastra: any, input?: any) {
+    const logger = mastra?.getLogger();
+    const targetUsernames = (input as FollowerUpdateInput)?.targetUsernames;
+
+    logger?.info("🚀 [Workflow] Starting Instagram follower update", {
+        mode: targetUsernames ? "Targeted (New Accounts)" : "All Accounts",
+        count: targetUsernames ? targetUsernames.length : "ALL"
+    });
+
+    // Step 1: Get accounts (either targeted or ALL from DB)
+    let accounts: string[] = [];
+    if (targetUsernames && Array.isArray(targetUsernames) && targetUsernames.length > 0) {
+        accounts = targetUsernames;
+    } else {
+        accounts = await getAllInstagramAccounts();
+    }
+
     logger?.info(`📖 [Step1] Found ${accounts.length} accounts to update`);
 
     let updatedCount = 0;
@@ -58,8 +74,8 @@ const stepUpdateFollowers = createStep({
     description: "Updates follower counts for all tracked Instagram accounts",
     inputSchema: z.unknown(),
     outputSchema: z.unknown(),
-    execute: async ({ mastra }) => {
-        return await executeFollowerUpdate(mastra);
+    execute: async ({ event, mastra }) => {
+        return await executeFollowerUpdate(mastra, event?.data);
     },
 });
 

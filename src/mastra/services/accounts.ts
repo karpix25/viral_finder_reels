@@ -83,15 +83,15 @@ export async function upsertFollowers(username: string, followers: number) {
 export async function seedInstagramAccountsFromFile(
   filePath = process.env.SEED_ACCOUNTS_FILE ||
     path.join(process.cwd(), "Парсинг аккаунтов - Лист1.csv"),
-) {
-  if (seededFromFile) return;
+): Promise<string[]> {
+  if (seededFromFile) return [];
   await ensureInstagramAccountsTable();
   try {
     await fs.access(filePath);
   } catch {
     console.log(`ℹ️ [DB] Seed file not found, skipping (${filePath})`);
     seededFromFile = true;
-    return;
+    return [];
   }
 
   const raw = await fs.readFile(filePath, "utf8");
@@ -103,20 +103,35 @@ export async function seedInstagramAccountsFromFile(
   if (!usernames.length) {
     console.log("ℹ️ [DB] Seed file empty, skipping");
     seededFromFile = true;
-    return;
+    return [];
   }
 
-  const values = usernames.map((u) => ({ username: u }));
+  // Find which ones are new
+  const existingRows = await db
+    .select({ username: instagramAccounts.username })
+    .from(instagramAccounts);
+  const existingSet = new Set(existingRows.map((r) => r.username));
 
-  await db
-    .insert(instagramAccounts)
-    .values(values)
-    .onConflictDoNothing();
+  const newUsernames = usernames.filter(u => !existingSet.has(u));
 
-  console.log(
-    `✅ [DB] Seeded ${usernames.length} accounts from file into instagram_accounts`,
-  );
+  if (newUsernames.length > 0) {
+    const values = newUsernames.map((u) => ({ username: u }));
+    await db
+      .insert(instagramAccounts)
+      .values(values)
+      .onConflictDoNothing();
+
+    console.log(
+      `✅ [DB] Seeded ${newUsernames.length} NEW accounts from file into instagram_accounts`,
+    );
+  } else {
+    console.log(
+      `ℹ️ [DB] No new accounts to seed (checked ${usernames.length} from file)`,
+    );
+  }
+
   seededFromFile = true;
+  return newUsernames;
 }
 
 export async function getFollowerCount(username: string): Promise<number> {

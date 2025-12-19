@@ -728,17 +728,23 @@ app.post("/api/test-followers-update", async (c) => {
   }
 });
 
-Promise.all([
-  ensureAppSettingsTable(),
-  seedInstagramAccountsFromFile(),
-  startTelegramBot(mastra),
-])
-  .catch((err) => {
-    console.error("Failed to run startup tasks", err);
-  })
-  .finally(() => {
+const startup = async () => {
+  try {
+    await ensureAppSettingsTable();
+    const newAccounts = await seedInstagramAccountsFromFile();
+    await startTelegramBot(mastra);
+
+    // If we found new accounts in the CSV that were just inserted, 
+    // immediately trigger a follower count update for them.
+    if (newAccounts && newAccounts.length > 0) {
+      console.log(`🚀 [Startup] Triggering immediate follower update for ${newAccounts.length} new accounts`);
+      executeFollowerUpdate(mastra, { targetUsernames: newAccounts })
+        .catch(err => console.error("❌ [Startup] specific follower update failed", err));
+    }
+
     startCronScheduler(mastra);
     console.log("⏰ [Scheduler] Started after ensuring settings table");
+
     serve(
       {
         fetch: app.fetch,
@@ -748,4 +754,9 @@ Promise.all([
         console.log(`🖥️  UI ready on http://0.0.0.0:${port}`);
       },
     );
-  });
+  } catch (err) {
+    console.error("Failed to run startup tasks", err);
+  }
+};
+
+startup();
