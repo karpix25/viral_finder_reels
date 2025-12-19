@@ -663,7 +663,7 @@ app.post("/api/settings", async (c) => {
       : 1;
     const weeklyTime = typeof body.weeklyTime === "string" ? body.weeklyTime : "09:00";
     const postsPerAccount = Math.min(200, Math.max(1, Number(body.postsPerAccount || 0)));
-    const testAccountsLimit = Math.min(10, Math.max(0, Number(body.testAccountsLimit || 0)));
+    const testAccountsLimit = Math.min(1000, Math.max(0, Number(body.testAccountsLimit || 0)));
     const viralityFormula = body.viralityFormula === "shares" ? "shares" : "current";
     const followersUpdateFreqDays = Math.max(1, Number(body.followersUpdateFreqDays || 4));
     const maxPostAgeDays = Math.max(1, Number(body.maxPostAgeDays || 30));
