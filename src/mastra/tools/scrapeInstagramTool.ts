@@ -116,6 +116,8 @@ export const scrapeInstagramTool = createTool({
           media_type: sample?.media_type,
           product_type: sample?.product_type,
           metricsKeys: sample?.metrics ? Object.keys(sample.metrics) : [],
+          user: sample?.user,
+          owner: sample?.owner,
         });
       }
 
