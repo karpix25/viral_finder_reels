@@ -109,6 +109,33 @@ export const scrapeInstagramTool = createTool({
           0;
       }
 
+      // Fallback: If still 0, try fetching from instagram-looter2 (Profile API)
+      if (!followersCount) {
+        logger?.info("⚠️ [ScrapeInstagram] Follower count not found in posts/DB, using fallback API (instagram-looter2)");
+        try {
+          const followersHost = "instagram-looter2.p.rapidapi.com";
+          const profileUrl = new URL(`https://${followersHost}/profile2`);
+          profileUrl.searchParams.set("username", username);
+
+          const profileRes = await fetch(profileUrl.toString(), {
+            headers: {
+              "X-Rapidapi-Key": rapidApiKey,
+              "X-Rapidapi-Host": followersHost,
+            },
+          });
+
+          if (profileRes.ok) {
+            const profileData = await profileRes.json();
+            followersCount = profileData?.follower_count || 0;
+            logger?.info("✅ [ScrapeInstagram] Recovered follower count from fallback API", { followersCount });
+          } else {
+            logger?.warn("⚠️ [ScrapeInstagram] Fallback API request failed", { status: profileRes.status });
+          }
+        } catch (err) {
+          logger?.warn("❌ [ScrapeInstagram] Fallback follower fetch failed", { error: String(err) });
+        }
+      }
+
       if (pageCount === 1) {
         const sample = items[0];
         logger?.info("🔍 [ScrapeInstagram] First item sample", {
