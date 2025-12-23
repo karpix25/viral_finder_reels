@@ -22,6 +22,7 @@ export type AppSettings = {
   viralityFormula: "current" | "shares";
   testAccountsLimit: number; // 0 = all, >0 limit accounts per run
   followersUpdateFreqDays: number; // how often to update followers (in days)
+  lastFollowerUpdateAt: string | null; // ISO string of last update time
   viralityMultipliers: ViralityMultipliers;
   carouselMultipliers: ViralityMultipliers;
   maxPostAgeDays: number; // max age of posts to analyze in days
@@ -58,6 +59,7 @@ const DEFAULT_SETTINGS: AppSettings = {
   viralityFormula: "current",
   testAccountsLimit: 0,
   followersUpdateFreqDays: 4,
+  lastFollowerUpdateAt: null,
   viralityMultipliers: DEFAULT_REELS_MULTIPLIERS,
   carouselMultipliers: DEFAULT_CAROUSEL_MULTIPLIERS,
   maxPostAgeDays: 30,
@@ -118,6 +120,7 @@ export async function getAppSettings(): Promise<AppSettings> {
       DEFAULT_SETTINGS.viralityFormula,
     testAccountsLimit: value.testAccountsLimit ?? DEFAULT_SETTINGS.testAccountsLimit,
     followersUpdateFreqDays: value.followersUpdateFreqDays ?? DEFAULT_SETTINGS.followersUpdateFreqDays,
+    lastFollowerUpdateAt: value.lastFollowerUpdateAt ?? DEFAULT_SETTINGS.lastFollowerUpdateAt,
     viralityMultipliers: mergedReels,
     carouselMultipliers: mergedCarousel,
     maxPostAgeDays: value.maxPostAgeDays ?? DEFAULT_SETTINGS.maxPostAgeDays,
@@ -149,6 +152,7 @@ export async function updateAppSettings(payload: Partial<AppSettings>): Promise<
     testAccountsLimit:
       payload.testAccountsLimit ?? current.testAccountsLimit ?? 0,
     followersUpdateFreqDays: payload.followersUpdateFreqDays ?? current.followersUpdateFreqDays,
+    lastFollowerUpdateAt: payload.lastFollowerUpdateAt === undefined ? current.lastFollowerUpdateAt : payload.lastFollowerUpdateAt,
     viralityMultipliers: nextReels,
     carouselMultipliers: nextCarousel,
     maxPostAgeDays: payload.maxPostAgeDays ?? current.maxPostAgeDays,

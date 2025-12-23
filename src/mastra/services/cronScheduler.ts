@@ -1,14 +1,15 @@
 import type { Mastra } from "@mastra/core";
 import { executeInstagramAnalysis } from "../workflows/instagramAnalysisWorkflow";
-import { getAppSettings } from "./settings";
+import { executeFollowerUpdate } from "../workflows/updateFollowersWorkflow";
+import { getAppSettings, updateAppSettings } from "./settings";
 
 export function startCronScheduler(mastra: Mastra) {
   const logger = mastra.getLogger();
-  
+
   console.log("⏰ [CronScheduler] startCronScheduler called", {
     nodeEnv: process.env.NODE_ENV,
   });
-  
+
   console.log("⏰ [CronScheduler] Starting interval-based scheduler (node-cron doesn't work in Replit)");
   console.log("🕐 [CronScheduler] Current time", {
     utc: new Date().toISOString(),
@@ -58,26 +59,73 @@ export function startCronScheduler(mastra: Mastra) {
     isRunning = true;
     lastRunKey = runKey;
 
-    logger?.info("⏰ [CronScheduler] Trigger", {
+    logger?.info("⏰ [CronScheduler] Trigger fired", {
       mode,
       runKey,
       time: now.toISOString(),
     });
-    
+
+    // 1. Run the main content analysis workflow
     try {
+      logger?.info("🚀 [CronScheduler] Starting Instagram Analysis...");
       const result = await executeInstagramAnalysis(mastra);
-      
-      logger?.info("✅ [CronScheduler] Workflow completed successfully", {
+
+      logger?.info("✅ [CronScheduler] Analysis completed successfully", {
         totalAccountsProcessed: result.totalAccountsProcessed,
         totalViralReelsSent: result.totalViralReelsSent,
       });
     } catch (error: any) {
-      logger?.error("❌ [CronScheduler] Workflow failed", {
+      logger?.error("❌ [CronScheduler] Analysis workflow failed", {
         error: error.message,
         stack: error.stack,
       });
-      
-      logger?.warn("⚠️ [CronScheduler] Will retry on next scheduled run");
+    }
+
+    // 2. Check if we need to update follower counts
+    // Logic: If last update was > X days ago (or never)
+    try {
+      const freqDays = settings.followersUpdateFreqDays || 4;
+      const lastUpdate = settings.lastFollowerUpdateAt ? new Date(settings.lastFollowerUpdateAt) : null;
+
+      let shouldUpdateFollowers = false;
+      if (!lastUpdate) {
+        shouldUpdateFollowers = true;
+      } else {
+        const daysSince = (now.getTime() - lastUpdate.getTime()) / (1000 * 60 * 60 * 24);
+        if (daysSince >= freqDays) {
+          shouldUpdateFollowers = true;
+        }
+      }
+
+      if (shouldUpdateFollowers) {
+        logger?.info("🚀 [CronScheduler] Triggering periodic follower count update", {
+          freqDays,
+          lastUpdate: lastUpdate ? lastUpdate.toISOString() : "NEVER"
+        });
+
+        // Run the workflow
+        const result = await executeFollowerUpdate(mastra);
+
+        // Update the timestamp in settings
+        await updateAppSettings({
+          lastFollowerUpdateAt: new Date().toISOString()
+        });
+
+        logger?.info("✅ [CronScheduler] Follower update completed", {
+          updated: result.updatedCount,
+          errors: result.errorCount
+        });
+      } else {
+        logger?.info("⏭️ [CronScheduler] Skipping follower update (not due yet)", {
+          lastUpdate: lastUpdate?.toISOString(),
+          freqDays
+        });
+      }
+
+    } catch (error: any) {
+      logger?.error("❌ [CronScheduler] Follower update failed", {
+        error: error.message
+      });
     } finally {
       isRunning = false;
     }
