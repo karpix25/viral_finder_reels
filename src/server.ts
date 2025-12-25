@@ -9,7 +9,12 @@ import {
 } from "./mastra/services/settings.js";
 import { executeInstagramAnalysis } from "./mastra/workflows/instagramAnalysisWorkflow.js";
 import { executeFollowerUpdate } from "./mastra/workflows/updateFollowersWorkflow.js";
-import { seedInstagramAccountsFromFile } from "./mastra/services/accounts.js";
+import {
+  seedInstagramAccountsFromFile,
+  getAccountsList,
+  addInstagramAccount,
+  deleteInstagramAccount,
+} from "./mastra/services/accounts.js";
 import { startTelegramBot } from "./mastra/services/telegramBot.js";
 
 const app = new Hono();
@@ -193,6 +198,7 @@ const html = `<!doctype html>
     <div class="tabs">
         <div class="tab active" onclick="switchTab('settings')">Настройки</div>
         <div class="tab" onclick="switchTab('feed')">Лента (Viral Feed)</div>
+        <div class="tab" onclick="switchTab('accounts')">Аккаунты</div>
     </div>
 
     <!-- SETTINGS VIEW -->
@@ -359,6 +365,31 @@ const html = `<!doctype html>
   <div id="feed-view" class="view-section">
       <div id="feed-container" class="feed-grid">
           <div class="muted" style="text-align:center; grid-column: 1/-1;">Нажмите "Обновить ленту", чтобы загрузить данные</div>
+      </div>
+  </div>
+
+  <!-- ACCOUNTS VIEW -->
+  <div id="accounts-view" class="view-section">
+      <div class="card" style="margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
+           <h3 style="margin: 0;">Управление аккаунтами</h3>
+           <div style="display: flex; gap: 10px;">
+               <input type="text" id="new-account-username" placeholder="username (без @)" style="width: 200px;" />
+               <button id="add-account-btn" style="padding: 8px 16px;">Добавить</button>
+           </div>
+      </div>
+      <div class="card">
+          <table style="width: 100%; text-align: left; border-collapse: collapse;">
+              <thead>
+                  <tr style="border-bottom: 1px solid #e5e7eb;">
+                      <th style="padding: 10px;">Username</th>
+                      <th style="padding: 10px;">Подписчики</th>
+                      <th style="padding: 10px;">Добавлен</th>
+                      <th style="padding: 10px; text-align: right;">Действия</th>
+                  </tr>
+              </thead>
+              <tbody id="accounts-table-body">
+              </tbody>
+          </table>
       </div>
   </div>
 
@@ -570,6 +601,7 @@ const html = `<!doctype html>
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
         if (tabName === 'settings') document.querySelectorAll('.tab')[0].classList.add('active');
         if (tabName === 'feed') document.querySelectorAll('.tab')[1].classList.add('active');
+        if (tabName === 'accounts') document.querySelectorAll('.tab')[2].classList.add('active');
 
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
         if (tabName === 'settings') {
@@ -580,6 +612,11 @@ const html = `<!doctype html>
             document.getElementById('feed-view').classList.add('active');
             refreshBtn.style.display = 'block';
             loadFeed();
+        }
+        if (tabName === 'accounts') {
+            document.getElementById('accounts-view').classList.add('active');
+            refreshBtn.style.display = 'none';
+            loadAccounts();
         }
     };
 
@@ -598,7 +635,7 @@ const html = `<!doctype html>
 
             container.innerHTML = '';
             posts.forEach(post => {
-                const growth = post.viralityScore ? \`🚀 \${parseFloat(post.viralityScore).toFixed(1)}x\` : '';
+                const growth = post.viralityScore ? `🚀 ${ parseFloat(post.viralityScore).toFixed(1)}x` : '';
                 const views = post.viewCount ? post.viewCount.toLocaleString() : '-';
                 const likes = post.likeCount ? post.likeCount.toLocaleString() : '-';
                 const comments = post.commentCount ? post.commentCount.toLocaleString() : '-';
@@ -607,22 +644,22 @@ const html = `<!doctype html>
                 
                 const card = document.createElement('div');
                 card.className = 'feed-card';
-                card.innerHTML = \`
-                    <div class="feed-thumb" style="background-image: url('\${thumb}'); background-color: #eee;">
-                        \${growth ? \`<div class="feed-badge">\${growth}</div>\` : ''}
-                    </div>
-                    <div class="feed-info">
-                        <div class="feed-user">\${post.username}</div>
-                        <div class="feed-stats">
-                            <span>👁 \${views}</span>
-                            <span>❤ \${likes}</span>
-                            <span>💬 \${comments}</span>
-                        </div>
-                        <div class="feed-reason">\${post.viralityReason || ''}</div>
-                        <div class="muted" style="font-size: 10px; margin-top: auto;">\${date}</div>
-                    </div>
-                    <a href="\${post.postUrl}" target="_blank" class="feed-link">Открыть в Instagram</a>
-                \`;
+                card.innerHTML = `
+  < div class="feed-thumb" style = "background-image: url('${thumb}'); background-color: #eee;" >
+    ${ growth ? `<div class="feed-badge">${growth}</div>` : '' }
+</div>
+  < div class="feed-info" >
+    <div class="feed-user" > ${ post.username } </div>
+      < div class="feed-stats" >
+        <span>👁 ${ views } </span>
+          <span>❤ ${ likes } </span>
+            <span>💬 ${ comments } </span>
+              </div>
+              < div class="feed-reason" > ${ post.viralityReason || '' } </div>
+                < div class="muted" style = "font-size: 10px; margin-top: auto;" > ${ date } </div>
+                  </div>
+                  < a href = "${post.postUrl}" target = "_blank" class="feed-link" > Открыть в Instagram </a>
+                    `;
                 container.appendChild(card);
             });
 
@@ -631,6 +668,93 @@ const html = `<!doctype html>
             console.error(err);
         }
     }
+
+    // ACCOUNTS LOGIC
+    const addAccountBtn = document.getElementById('add-account-btn');
+    const newAccountInput = document.getElementById('new-account-username');
+    const accountsTableBody = document.getElementById('accounts-table-body');
+
+    async function loadAccounts() {
+        accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center;" class="muted">Загрузка...</td></tr>';
+        try {
+             const res = await fetch('/api/accounts');
+             const accounts = await res.json();
+             
+             if (!accounts || accounts.length === 0) {
+                 accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center;" class="muted">Нет аккаунтов. Добавьте первый!</td></tr>';
+                 return;
+             }
+
+             accountsTableBody.innerHTML = '';
+             accounts.forEach(acc => {
+                 const tr = document.createElement('tr');
+                 tr.style.borderBottom = '1px solid #f3f4f6';
+                 tr.innerHTML = `
+                    < td style = "padding: 10px; font-weight: 500;" > ${ acc.username } </td>
+                      < td style = "padding: 10px;" class="muted" > ${ acc.followers.toLocaleString() } </td>
+                        < td style = "padding: 10px;" class="muted" > ${ new Date(acc.createdAt).toLocaleDateString() } </td>
+                          < td style = "padding: 10px; text-align: right;" >
+                            <button onclick="deleteAccount('${acc.username}')" style = "background: #fee2e2; color: #b91c1c; padding: 6px 12px; border-radius: 8px; font-size: 12px; box-shadow:none;" > Удалить </button>
+                              </td>
+                                `;
+                 accountsTableBody.appendChild(tr);
+             });
+        } catch(err) {
+            accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center; color:red;">Ошибка загрузки</td></tr>';
+        }
+    }
+
+    async function addAccount() {
+        const username = newAccountInput.value.trim();
+        if (!username) return;
+        
+        addAccountBtn.disabled = true;
+        addAccountBtn.textContent = '...';
+        
+        try {
+            const res = await fetch('/api/accounts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await res.json();
+            if (data.added) {
+                newAccountInput.value = '';
+                loadAccounts();
+            } else {
+                alert(data.message || 'Ошибка');
+            }
+        } catch(err) {
+            alert('Ошибка сети');
+        } finally {
+            addAccountBtn.disabled = false;
+            addAccountBtn.textContent = 'Добавить';
+        }
+    }
+
+    async function deleteAccount(username) {
+        if (!confirm(`Удалить аккаунт @${ username }?`)) return;
+        
+        try {
+            const res = await fetch('/api/accounts', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            const data = await res.json();
+            if (data.deleted) {
+                loadAccounts();
+            } else {
+                alert(data.message || 'Ошибка');
+            }
+        } catch(err) {
+            alert('Ошибка сети');
+        }
+    }
+    
+    // Expose deleteAccount to window for onclick
+    window.deleteAccount = deleteAccount;
+    addAccountBtn.addEventListener('click', addAccount);
 
     loadSettings();
   </script>
@@ -735,6 +859,45 @@ app.post("/api/test-followers-update", async (c) => {
   } catch (err: any) {
     console.error("Failed to start follower update", err);
     return c.json({ error: "Failed to start follower update", details: String(err) }, 500);
+  }
+});
+
+
+app.get("/api/accounts", async (c) => {
+  try {
+    const accounts = await getAccountsList();
+    return c.json(accounts);
+  } catch (err: any) {
+    console.error("Failed to fetch accounts", err);
+    return c.json({ error: "Failed to fetch accounts" }, 500);
+  }
+});
+
+app.post("/api/accounts", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { username } = body;
+    if (!username) return c.json({ error: "Username required" }, 400);
+
+    const result = await addInstagramAccount(username);
+    return c.json(result);
+  } catch (err: any) {
+    console.error("Failed to add account", err);
+    return c.json({ error: "Failed to add account" }, 500);
+  }
+});
+
+app.delete("/api/accounts", async (c) => {
+  try {
+    const body = await c.req.json();
+    const { username } = body;
+    if (!username) return c.json({ error: "Username required" }, 400);
+
+    const result = await deleteInstagramAccount(username);
+    return c.json(result);
+  } catch (err: any) {
+    console.error("Failed to delete account", err);
+    return c.json({ error: "Failed to delete account" }, 500);
   }
 });
 

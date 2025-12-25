@@ -147,3 +147,29 @@ export async function getFollowerCount(username: string): Promise<number> {
 
   return result[0]?.followers ?? 0;
 }
+
+export async function getAccountsList() {
+  await ensureInstagramAccountsTable();
+  const rows = await db
+    .select()
+    .from(instagramAccounts)
+    .orderBy(asc(instagramAccounts.createdAt));
+  return rows;
+}
+
+export async function deleteInstagramAccount(username: string) {
+  await ensureInstagramAccountsTable();
+  const cleaned = username.trim();
+  if (!cleaned) return { deleted: false, message: "Invalid username" };
+
+  const result = await db
+    .delete(instagramAccounts)
+    .where(eq(instagramAccounts.username, cleaned))
+    .returning();
+
+  if (result.length > 0) {
+    return { deleted: true, message: `Account @${cleaned} deleted` };
+  } else {
+    return { deleted: false, message: `Account @${cleaned} not found` };
+  }
+}
