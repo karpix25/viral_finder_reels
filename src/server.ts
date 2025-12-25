@@ -865,6 +865,7 @@ app.post("/api/test-followers-update", async (c) => {
 
 app.get("/api/accounts", async (c) => {
   try {
+    console.log("🔎 [API] GET /api/accounts");
     const accounts = await getAccountsList();
     return c.json(accounts);
   } catch (err: any) {
@@ -877,9 +878,11 @@ app.post("/api/accounts", async (c) => {
   try {
     const body = await c.req.json();
     const { username } = body;
+    console.log(`➕ [API] POST /api/accounts request for ${username}`);
     if (!username) return c.json({ error: "Username required" }, 400);
 
     const result = await addInstagramAccount(username);
+    console.log(`✅ [API] Account added result:`, result);
     return c.json(result);
   } catch (err: any) {
     console.error("Failed to add account", err);
@@ -891,9 +894,11 @@ app.delete("/api/accounts", async (c) => {
   try {
     const body = await c.req.json();
     const { username } = body;
+    console.log(`🗑️ [API] DELETE /api/accounts request for ${username}`);
     if (!username) return c.json({ error: "Username required" }, 400);
 
     const result = await deleteInstagramAccount(username);
+    console.log(`✅ [API] Account delete result:`, result);
     return c.json(result);
   } catch (err: any) {
     console.error("Failed to delete account", err);

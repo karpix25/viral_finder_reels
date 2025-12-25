@@ -56,6 +56,7 @@ export async function addInstagramAccount(username: string) {
   }
 
   await db.insert(instagramAccounts).values({ username: cleaned });
+  console.log(`✅ [DB] Added new account: ${cleaned}`);
 
   return {
     added: true,
@@ -168,8 +169,10 @@ export async function deleteInstagramAccount(username: string) {
     .returning();
 
   if (result.length > 0) {
+    console.log(`✅ [DB] Deleted account: ${cleaned}`);
     return { deleted: true, message: `Account @${cleaned} deleted` };
   } else {
+    console.log(`⚠️ [DB] Account not found for deletion: ${cleaned}`);
     return { deleted: false, message: `Account @${cleaned} not found` };
   }
 }
