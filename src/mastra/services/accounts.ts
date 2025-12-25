@@ -149,13 +149,22 @@ export async function getFollowerCount(username: string): Promise<number> {
   return result[0]?.followers ?? 0;
 }
 
-export async function getAccountsList(page = 1, limit = 0) {
+export async function getAccountsList(page = 1, limit = 0, search = "") {
   await ensureInstagramAccountsTable();
 
+  const searchFilter = search ? sql`${instagramAccounts.username} ILIKE ${`%${search}%`}` : undefined;
+
   // Get total count
-  const countRes = await db
+  const countQuery = db
     .select({ count: sql<number>`count(*)` })
-    .from(instagramAccounts);
+    .from(instagramAccounts)
+    .$dynamic();
+
+  if (searchFilter) {
+    countQuery.where(searchFilter);
+  }
+
+  const countRes = await countQuery;
   const total = Number(countRes[0]?.count || 0);
 
   let query = db
@@ -163,6 +172,10 @@ export async function getAccountsList(page = 1, limit = 0) {
     .from(instagramAccounts)
     .orderBy(asc(instagramAccounts.createdAt))
     .$dynamic();
+
+  if (searchFilter) {
+    query.where(searchFilter);
+  }
 
   if (limit > 0) {
     const offset = (page - 1) * limit;

@@ -381,7 +381,8 @@ const html = `<!doctype html>
       <!-- Pagination Controls -->
       <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
           <div style="display: flex; align-items: center; gap: 10px;">
-             <label class="muted" for="limit-select" style="margin:0; font-weight:normal;">Показывать по:</label>
+             <input type="text" id="search-accounts" placeholder="Поиск аккаунтов..." style="width: 200px; padding: 6px 12px;" />
+             <label class="muted" for="limit-select" style="margin:0; font-weight:normal; margin-left: 10px;">Показывать по:</label>
              <select id="limit-select" style="width: auto; padding: 6px 10px;">
                  <option value="10">10</option>
                  <option value="20">20</option>
@@ -699,6 +700,7 @@ const html = `<!doctype html>
     const prevPageBtn = document.getElementById('prev-page');
     const nextPageBtn = document.getElementById('next-page');
     const pageInfo = document.getElementById('page-info');
+    const searchInput = document.getElementById('search-accounts');
 
     let currentPage = 1;
     let currentLimit = 10;
@@ -720,14 +722,26 @@ const html = `<!doctype html>
         currentPage++;
         loadAccounts();
     });
+    
+    // Debounce search
+    let searchTimeout;
+    searchInput.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = setTimeout(() => {
+            currentPage = 1;
+            loadAccounts();
+        }, 300);
+    });
 
     async function loadAccounts() {
         accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center;" class="muted">Загрузка...</td></tr>';
         prevPageBtn.disabled = true;
         nextPageBtn.disabled = true;
+        
+        const search = searchInput.value.trim();
 
         try {
-             const res = await fetch(\`/api/accounts?page=\${currentPage}&limit=\${currentLimit}\`);
+             const res = await fetch(\`/api/accounts?page=\${currentPage}&limit=\${currentLimit}&search=\${encodeURIComponent(search)}\`);
              const data = await res.json();
              const accounts = data.accounts || []; // handle object return
              const total = data.total || 0;
@@ -926,9 +940,10 @@ app.get("/api/accounts", async (c) => {
   try {
     const page = Number(c.req.query("page") || "1");
     const limit = Number(c.req.query("limit") || "0"); // 0 means all
+    const search = c.req.query("search") || "";
 
-    console.log(`🔎 [API] GET /api/accounts?page=${page}&limit=${limit}`);
-    const result = await getAccountsList(page, limit);
+    console.log(`🔎 [API] GET /api/accounts?page=${page}&limit=${limit}&search=${search}`);
+    const result = await getAccountsList(page, limit, search);
     return c.json(result);
   } catch (err: any) {
     console.error("Failed to fetch accounts", err);
