@@ -635,7 +635,7 @@ const html = `<!doctype html>
 
             container.innerHTML = '';
             posts.forEach(post => {
-                const growth = post.viralityScore ? `🚀 ${ parseFloat(post.viralityScore).toFixed(1)}x` : '';
+                const growth = post.viralityScore ? \`🚀 \${parseFloat(post.viralityScore).toFixed(1)}x\` : '';
                 const views = post.viewCount ? post.viewCount.toLocaleString() : '-';
                 const likes = post.likeCount ? post.likeCount.toLocaleString() : '-';
                 const comments = post.commentCount ? post.commentCount.toLocaleString() : '-';
@@ -644,22 +644,22 @@ const html = `<!doctype html>
                 
                 const card = document.createElement('div');
                 card.className = 'feed-card';
-                card.innerHTML = `
-  < div class="feed-thumb" style = "background-image: url('${thumb}'); background-color: #eee;" >
-    ${ growth ? `<div class="feed-badge">${growth}</div>` : '' }
-</div>
-  < div class="feed-info" >
-    <div class="feed-user" > ${ post.username } </div>
-      < div class="feed-stats" >
-        <span>👁 ${ views } </span>
-          <span>❤ ${ likes } </span>
-            <span>💬 ${ comments } </span>
-              </div>
-              < div class="feed-reason" > ${ post.viralityReason || '' } </div>
-                < div class="muted" style = "font-size: 10px; margin-top: auto;" > ${ date } </div>
-                  </div>
-                  < a href = "${post.postUrl}" target = "_blank" class="feed-link" > Открыть в Instagram </a>
-                    `;
+                card.innerHTML = \`
+                    <div class="feed-thumb" style="background-image: url('\${thumb}'); background-color: #eee;">
+                        \${growth ? \`<div class="feed-badge">\${growth}</div>\` : ''}
+                    </div>
+                    <div class="feed-info">
+                        <div class="feed-user">\${post.username}</div>
+                        <div class="feed-stats">
+                            <span>👁 \${views}</span>
+                            <span>❤ \${likes}</span>
+                            <span>💬 \${comments}</span>
+                        </div>
+                        <div class="feed-reason">\${post.viralityReason || ''}</div>
+                        <div class="muted" style="font-size: 10px; margin-top: auto;">\${date}</div>
+                    </div>
+                    <a href="\${post.postUrl}" target="_blank" class="feed-link">Открыть в Instagram</a>
+                \`;
                 container.appendChild(card);
             });
 
@@ -689,14 +689,14 @@ const html = `<!doctype html>
              accounts.forEach(acc => {
                  const tr = document.createElement('tr');
                  tr.style.borderBottom = '1px solid #f3f4f6';
-                 tr.innerHTML = `
-                    < td style = "padding: 10px; font-weight: 500;" > ${ acc.username } </td>
-                      < td style = "padding: 10px;" class="muted" > ${ acc.followers.toLocaleString() } </td>
-                        < td style = "padding: 10px;" class="muted" > ${ new Date(acc.createdAt).toLocaleDateString() } </td>
-                          < td style = "padding: 10px; text-align: right;" >
-                            <button onclick="deleteAccount('${acc.username}')" style = "background: #fee2e2; color: #b91c1c; padding: 6px 12px; border-radius: 8px; font-size: 12px; box-shadow:none;" > Удалить </button>
-                              </td>
-                                `;
+                 tr.innerHTML = \`
+                    <td style="padding: 10px; font-weight: 500;">\${acc.username}</td>
+                    <td style="padding: 10px;" class="muted">\${acc.followers.toLocaleString()}</td>
+                    <td style="padding: 10px;" class="muted">\${new Date(acc.createdAt).toLocaleDateString()}</td>
+                    <td style="padding: 10px; text-align: right;">
+                        <button onclick="deleteAccount('\${acc.username}')" style="background: #fee2e2; color: #b91c1c; padding: 6px 12px; border-radius: 8px; font-size: 12px; box-shadow:none;">Удалить</button>
+                    </td>
+                 \`;
                  accountsTableBody.appendChild(tr);
              });
         } catch(err) {
@@ -733,7 +733,7 @@ const html = `<!doctype html>
     }
 
     async function deleteAccount(username) {
-        if (!confirm(`Удалить аккаунт @${ username }?`)) return;
+        if (!confirm(\`Удалить аккаунт @\${username}?\`)) return;
         
         try {
             const res = await fetch('/api/accounts', {
