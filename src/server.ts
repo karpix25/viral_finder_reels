@@ -377,6 +377,26 @@ const html = `<!doctype html>
                <button id="add-account-btn" style="padding: 8px 16px;">Добавить</button>
            </div>
       </div>
+      
+      <!-- Pagination Controls -->
+      <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+             <label class="muted" for="limit-select" style="margin:0; font-weight:normal;">Показывать по:</label>
+             <select id="limit-select" style="width: auto; padding: 6px 10px;">
+                 <option value="10">10</option>
+                 <option value="20">20</option>
+                 <option value="30">30</option>
+                 <option value="50">50</option>
+                 <option value="0">Все</option>
+             </select>
+          </div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+              <button id="prev-page" class="btn-secondary" style="padding: 6px 12px; font-size: 13px;" disabled>Previous</button>
+              <span id="page-info" class="muted" style="font-size: 13px;">Page 1</span>
+              <button id="next-page" class="btn-secondary" style="padding: 6px 12px; font-size: 13px;" disabled>Next</button>
+          </div>
+      </div>
+
       <div class="card">
           <table style="width: 100%; text-align: left; border-collapse: collapse;">
               <thead>
@@ -673,13 +693,52 @@ const html = `<!doctype html>
     const addAccountBtn = document.getElementById('add-account-btn');
     const newAccountInput = document.getElementById('new-account-username');
     const accountsTableBody = document.getElementById('accounts-table-body');
+    
+    // Pagination Controls
+    const limitSelect = document.getElementById('limit-select');
+    const prevPageBtn = document.getElementById('prev-page');
+    const nextPageBtn = document.getElementById('next-page');
+    const pageInfo = document.getElementById('page-info');
+
+    let currentPage = 1;
+    let currentLimit = 10;
+    
+    limitSelect.addEventListener('change', () => {
+        currentLimit = Number(limitSelect.value);
+        currentPage = 1;
+        loadAccounts();
+    });
+
+    prevPageBtn.addEventListener('click', () => {
+        if (currentPage > 1) {
+            currentPage--;
+            loadAccounts();
+        }
+    });
+
+    nextPageBtn.addEventListener('click', () => {
+        currentPage++;
+        loadAccounts();
+    });
 
     async function loadAccounts() {
         accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center;" class="muted">Загрузка...</td></tr>';
+        prevPageBtn.disabled = true;
+        nextPageBtn.disabled = true;
+
         try {
-             const res = await fetch('/api/accounts');
-             const accounts = await res.json();
+             const res = await fetch(\`/api/accounts?page=\${currentPage}&limit=\${currentLimit}\`);
+             const data = await res.json();
+             const accounts = data.accounts || []; // handle object return
+             const total = data.total || 0;
              
+             // Update pagination state
+             const totalPages = currentLimit > 0 ? Math.ceil(total / currentLimit) : 1;
+             pageInfo.textContent = \`Page \${currentPage} of \${totalPages} (Total: \${total})\`;
+             
+             prevPageBtn.disabled = currentPage <= 1;
+             nextPageBtn.disabled = currentPage >= totalPages;
+
              if (!accounts || accounts.length === 0) {
                  accountsTableBody.innerHTML = '<tr><td colspan="4" style="padding:10px; text-align:center;" class="muted">Нет аккаунтов. Добавьте первый!</td></tr>';
                  return;
@@ -865,9 +924,12 @@ app.post("/api/test-followers-update", async (c) => {
 
 app.get("/api/accounts", async (c) => {
   try {
-    console.log("🔎 [API] GET /api/accounts");
-    const accounts = await getAccountsList();
-    return c.json(accounts);
+    const page = Number(c.req.query("page") || "1");
+    const limit = Number(c.req.query("limit") || "0"); // 0 means all
+
+    console.log(`🔎 [API] GET /api/accounts?page=${page}&limit=${limit}`);
+    const result = await getAccountsList(page, limit);
+    return c.json(result);
   } catch (err: any) {
     console.error("Failed to fetch accounts", err);
     return c.json({ error: "Failed to fetch accounts" }, 500);

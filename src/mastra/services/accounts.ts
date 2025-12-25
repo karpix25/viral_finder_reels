@@ -1,4 +1,4 @@
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, sql } from "drizzle-orm";
 import fs from "fs/promises";
 import path from "path";
 import { db, pool } from "../storage/index.js";
@@ -149,13 +149,33 @@ export async function getFollowerCount(username: string): Promise<number> {
   return result[0]?.followers ?? 0;
 }
 
-export async function getAccountsList() {
+export async function getAccountsList(page = 1, limit = 0) {
   await ensureInstagramAccountsTable();
-  const rows = await db
+
+  // Get total count
+  const countRes = await db
+    .select({ count: sql<number>`count(*)` })
+    .from(instagramAccounts);
+  const total = Number(countRes[0]?.count || 0);
+
+  let query = db
     .select()
     .from(instagramAccounts)
-    .orderBy(asc(instagramAccounts.createdAt));
-  return rows;
+    .orderBy(asc(instagramAccounts.createdAt))
+    .$dynamic();
+
+  if (limit > 0) {
+    const offset = (page - 1) * limit;
+    query = query.limit(limit).offset(offset);
+  }
+
+  const rows = await query;
+  return {
+    accounts: rows,
+    total,
+    page,
+    limit
+  };
 }
 
 export async function deleteInstagramAccount(username: string) {
