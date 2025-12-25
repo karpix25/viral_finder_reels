@@ -23,6 +23,15 @@ export const sentViralReels = pgTable("sent_viral_reels", {
   sentAt: timestamp("sent_at").defaultNow().notNull(),
 });
 
+export const users = pgTable("users", {
+  id: serial("id").primaryKey(),
+  email: varchar("email", { length: 255 }).notNull().unique(),
+  passwordHash: varchar("password_hash", { length: 255 }).notNull(),
+  salt: varchar("salt", { length: 255 }).notNull(),
+  role: varchar("role", { length: 50 }).notNull().default("ACCOUNTS_ONLY"), // 'ADMIN' or 'ACCOUNTS_ONLY'
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
 // Table to track workflow progress
 export const workflowProgress = pgTable("workflow_progress", {
   id: serial("id").primaryKey(),
