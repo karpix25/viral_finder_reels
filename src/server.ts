@@ -15,14 +15,6 @@ import {
   addInstagramAccount,
   deleteInstagramAccount,
 } from "./mastra/services/accounts.js";
-import {
-  seedDefaultAdmin,
-  authenticateUser,
-  createUser,
-  getAllUsers,
-  deleteUser
-} from "./mastra/services/auth.js";
-import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { startTelegramBot } from "./mastra/services/telegramBot.js";
 
 const app = new Hono();
@@ -159,23 +151,6 @@ const html = `<!doctype html>
       gap: 10px;
       align-items: center;
     }
-    .user-badge {
-        font-size: 13px;
-        color: var(--muted);
-        background: #f3f4f6;
-        padding: 4px 10px;
-        border-radius: 20px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .logout-btn {
-        font-size: 13px;
-        color: #ef4444;
-        cursor: pointer;
-        padding: 4px 8px;
-    }
-    .logout-btn:hover { text-decoration: underline; }
     
     /* Tabs */
     .tabs { display: flex; gap: 20px; margin-bottom: 30px; border-bottom: 1px solid #e5e7eb; padding-bottom: 10px; }
@@ -216,21 +191,14 @@ const html = `<!doctype html>
         <h1>Dashboard</h1>
       </div>
       <div class="header-actions">
-        <div id="user-badge" class="user-badge" style="display:none">
-            <span id="user-email"></span>
-            <span class="muted">•</span>
-            <span id="user-role" style="font-size:11px; text-transform:uppercase;"></span>
-            <span onclick="logout()" class="logout-btn">Выйти</span>
-        </div>
         <button id="refresh-feed" class="btn-secondary" style="padding: 8px 16px; font-size: 13px; display: none;">🔄 Обновить ленту</button>
       </div>
     </header>
 
     <div class="tabs">
-        <div class="tab active" onclick="switchTab('settings')" id="tab-settings">Настройки</div>
-        <div class="tab" onclick="switchTab('feed')" id="tab-feed">Лента (Viral Feed)</div>
-        <div class="tab" onclick="switchTab('accounts')" id="tab-accounts">Аккаунты</div>
-        <div class="tab" onclick="switchTab('users')" id="tab-users" style="display:none">Пользователи</div>
+        <div class="tab active" onclick="switchTab('settings')">Настройки</div>
+        <div class="tab" onclick="switchTab('feed')">Лента (Viral Feed)</div>
+        <div class="tab" onclick="switchTab('accounts')">Аккаунты</div>
     </div>
 
     <!-- SETTINGS VIEW -->
@@ -445,37 +413,6 @@ const html = `<!doctype html>
           </table>
       </div>
   </div>
-  
-  <!-- USERS VIEW (Admin Only) -->
-  <div id="users-view" class="view-section">
-      <div class="card" style="margin-bottom: 20px;">
-           <h3 style="margin: 0; margin-bottom: 15px;">Управление пользователями</h3>
-           <div style="display: flex; gap: 10px; align-items: center;">
-               <input type="email" id="new-user-email" placeholder="Email" style="width: 200px;" />
-               <input type="password" id="new-user-password" placeholder="Password" style="width: 150px;" />
-               <select id="new-user-role" style="width: 150px;">
-                   <option value="ACCOUNTS_ONLY">Accounts Only</option>
-                   <option value="ADMIN">Admin</option>
-               </select>
-               <button id="add-user-btn" style="padding: 8px 16px;">Создать</button>
-           </div>
-      </div>
-
-      <div class="card">
-          <table style="width: 100%; text-align: left; border-collapse: collapse;">
-              <thead>
-                  <tr style="border-bottom: 1px solid #e5e7eb;">
-                      <th style="padding: 10px;">Email</th>
-                      <th style="padding: 10px;">Role</th>
-                      <th style="padding: 10px;">Created At</th>
-                      <th style="padding: 10px; text-align: right;">Actions</th>
-                  </tr>
-              </thead>
-              <tbody id="users-table-body">
-              </tbody>
-          </table>
-      </div>
-  </div>
 
   </div>
 
@@ -647,119 +584,6 @@ const html = `<!doctype html>
       statusEl.textContent = 'Сохранено';
     }
 
-    // AUTH & STARTUP
-    let currentUser = null;
-
-    async function checkAuth() {
-        try {
-            const res = await fetch('/api/auth/me');
-            const data = await res.json();
-            currentUser = data.user;
-            
-            if (currentUser) {
-                document.getElementById('user-badge').style.display = 'flex';
-                document.getElementById('user-email').textContent = currentUser.email;
-                document.getElementById('user-role').textContent = currentUser.role;
-
-                if (currentUser.role === 'ACCOUNTS_ONLY') {
-                    document.getElementById('tab-settings').style.display = 'none';
-                    document.getElementById('tab-users').style.display = 'none';
-                    // Default to accounts if settings is hidden and active
-                    // Actually, let's just create a better init logic
-                } else {
-                    document.getElementById('tab-users').style.display = 'block';
-                }
-            }
-        } catch(e) { console.error('Auth check failed', e); }
-    }
-
-    async function logout() {
-        await fetch('/api/auth/logout', { method: 'POST' });
-        window.location.reload();
-    }
-    
-    // USERS MANAGEMENT
-    const usersTableBody = document.getElementById('users-table-body');
-    const newUserEmail = document.getElementById('new-user-email');
-    const newUserPassword = document.getElementById('new-user-password');
-    const newUserRole = document.getElementById('new-user-role');
-    const addUserBtn = document.getElementById('add-user-btn');
-
-    async function loadUsers() {
-        usersTableBody.innerHTML = '<tr><td colspan="4" class="muted" style="text-align:center">Loading...</td></tr>';
-        try {
-            const res = await fetch('/api/users');
-            if (res.status === 403) {
-                 usersTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red">Access Denied</td></tr>';
-                 return;
-            }
-            const users = await res.json();
-            usersTableBody.innerHTML = '';
-            
-            users.forEach(u => {
-                const tr = document.createElement('tr');
-                tr.style.borderBottom = '1px solid #f3f4f6';
-                const isMe = currentUser && currentUser.email === u.email;
-                
-                tr.innerHTML = \`
-                    <td style="padding:10px">\${u.email} \${isMe ? '(You)' : ''}</td>
-                    <td style="padding:10px"><span style="font-size:11px; background:#e0f2fe; color:#0369a1; padding:2px 6px; border-radius:4px">\${u.role}</span></td>
-                    <td style="padding:10px" class="muted">\${new Date(u.createdAt).toLocaleDateString()}</td>
-                    <td style="padding:10px; text-align:right">
-                        \${u.email !== 'admin@example.com' && !isMe ? \`<button onclick="deleteUser('\${u.email}')" style="background:#fee2e2; color:#b91c1c; padding:4px 8px; border-radius:6px; font-size:12px; border:none; cursor:pointer">Delete</button>\` : ''}
-                    </td>
-                \`;
-                usersTableBody.appendChild(tr);
-            });
-        } catch(e) {
-            console.error(e);
-            usersTableBody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:red">Error loading users</td></tr>';
-        }
-    }
-
-    async function addUser() {
-        const email = newUserEmail.value;
-        const password = newUserPassword.value;
-        const role = newUserRole.value;
-        
-        if (!email || !password) return alert('Email and Password required');
-        
-        try {
-            const res = await fetch('/api/users', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email, password, role })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            
-            newUserEmail.value = '';
-            newUserPassword.value = '';
-            loadUsers();
-        } catch(e) {
-            alert('Failed to add user: ' + e.message);
-        }
-    }
-
-    async function deleteUser(email) {
-        if (!confirm('Delete user ' + email + '?')) return;
-        try {
-            const res = await fetch('/api/users', {
-                method: 'DELETE',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ email })
-            });
-            const data = await res.json();
-            if (data.error) throw new Error(data.error);
-            loadUsers();
-        } catch(e) {
-            alert('Failed to delete user: ' + e.message);
-        }
-    }
-    
-    addUserBtn.addEventListener('click', addUser);
-
-
     async function runTest() {
       statusEl.textContent = 'Тестовый запуск контента...';
       const res = await fetch('/api/test-run', { method: 'POST' });
@@ -795,22 +619,15 @@ const html = `<!doctype html>
     refreshBtn.addEventListener('click', loadFeed);
 
     window.switchTab = function(tabName) {
-        if (currentUser && currentUser.role === 'ACCOUNTS_ONLY' && (tabName === 'settings' || tabName === 'users')) {
-            alert('Access Denied');
-            return;
-        }
-
         document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-        if (tabName === 'settings') document.getElementById('tab-settings').classList.add('active');
-        if (tabName === 'feed') document.getElementById('tab-feed').classList.add('active');
-        if (tabName === 'accounts') document.getElementById('tab-accounts').classList.add('active');
-        if (tabName === 'users') document.getElementById('tab-users').classList.add('active');
+        if (tabName === 'settings') document.querySelectorAll('.tab')[0].classList.add('active');
+        if (tabName === 'feed') document.querySelectorAll('.tab')[1].classList.add('active');
+        if (tabName === 'accounts') document.querySelectorAll('.tab')[2].classList.add('active');
 
         document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
-        refreshBtn.style.display = 'none';
-
         if (tabName === 'settings') {
             document.getElementById('settings-view').classList.add('active');
+            refreshBtn.style.display = 'none';
         }
         if (tabName === 'feed') {
             document.getElementById('feed-view').classList.add('active');
@@ -819,22 +636,10 @@ const html = `<!doctype html>
         }
         if (tabName === 'accounts') {
             document.getElementById('accounts-view').classList.add('active');
+            refreshBtn.style.display = 'none';
             loadAccounts();
         }
-        if (tabName === 'users') {
-            document.getElementById('users-view').classList.add('active');
-            loadUsers();
-        }
     };
-
-    // Init with auth check
-    checkAuth().then(() => {
-        loadSettings();
-        // If accounts only, switch to accounts or feed
-        if (currentUser && currentUser.role === 'ACCOUNTS_ONLY') {
-            switchTab('feed');
-        }
-    });
 
     async function loadFeed() {
         const container = document.getElementById('feed-container');
@@ -1031,144 +836,6 @@ const html = `<!doctype html>
 
 app.get("/", (c) => c.html(html));
 
-const loginHtml = `<!doctype html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Login - InstaViral</title>
-    <style>
-        body { font-family: system-ui; display:flex; justify-content:center; align-items:center; height:100vh; background:#f5f6f7; margin:0 }
-        .card { background:white; padding:2rem; border-radius:12px; box-shadow:0 4px 12px rgba(0,0,0,0.1); width:320px }
-        input { width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:6px; box-sizing:border-box }
-        button { width:100%; padding:10px; background:#007aff; color:white; border:none; border-radius:6px; cursor:pointer }
-        .error { color:red; font-size:12px; margin-bottom:10px; text-align:center; height: 16px; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h2 style="text-align:center; margin-top:0">Sign In</h2>
-        <div id="error" class="error"></div>
-        <input type="email" id="email" placeholder="Email" />
-        <input type="password" id="password" placeholder="Password" />
-        <button onclick="login()">Login</button>
-    </div>
-    <script>
-        async function login() {
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const errDiv = document.getElementById('error');
-            errDiv.textContent = '';
-            
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ email, password })
-                });
-                const data = await res.json();
-                if (data.success) {
-                    window.location.reload();
-                } else {
-                    errDiv.textContent = data.error || 'Login failed';
-                }
-            } catch(e) {
-                errDiv.textContent = 'Network error';
-            }
-        }
-    </script>
-</body>
-</html>`;
-
-// --- MIDDLEWARE ---
-app.use('*', async (c, next) => {
-  const path = c.req.path;
-  // Public paths
-  if (path === '/api/auth/login' || path.startsWith('/static')) {
-    return next();
-  }
-
-  const session = getCookie(c, 'auth_session');
-
-  // API Protection
-  if (path.startsWith('/api')) {
-    if (!session) return c.json({ error: 'Unauthorized' }, 401);
-
-    // Admin only routes
-    if (path.startsWith('/api/users') || path.startsWith('/api/settings')) {
-      const user = JSON.parse(decodeURIComponent(session));
-      if (user.role !== 'ADMIN') return c.json({ error: 'Forbidden' }, 403);
-    }
-  } else if (path === '/') {
-    // Page Protection
-    if (!session) {
-      return c.html(loginHtml);
-    }
-  }
-
-  await next();
-});
-
-// --- AUTH API ---
-app.post("/api/auth/login", async (c) => {
-  try {
-    const { email, password } = await c.req.json();
-    const user = await authenticateUser(email, password);
-
-    if (user) {
-      setCookie(c, 'auth_session', JSON.stringify({ email: user.email, role: user.role }), {
-        httpOnly: true,
-        maxAge: 86400 * 7, // 7 days
-        path: '/',
-      });
-      return c.json({ success: true, user });
-    }
-    return c.json({ error: "Invalid credentials" }, 401);
-  } catch (err) {
-    return c.json({ error: "Login failed" }, 500);
-  }
-});
-
-app.post("/api/auth/logout", (c) => {
-  deleteCookie(c, 'auth_session');
-  return c.json({ success: true });
-});
-
-app.get("/api/auth/me", (c) => {
-  const session = getCookie(c, 'auth_session');
-  if (!session) return c.json({ user: null });
-  return c.json({ user: JSON.parse(decodeURIComponent(session)) });
-});
-
-// --- USER MANAGEMENT API (Admin Only) ---
-app.get("/api/users", async (c) => {
-  try {
-    const users = await getAllUsers();
-    return c.json(users);
-  } catch (err: any) {
-    return c.json({ error: "Failed to fetch users" }, 500);
-  }
-});
-
-app.post("/api/users", async (c) => {
-  try {
-    const { email, password, role } = await c.req.json();
-    const result = await createUser(email, password, role);
-    return c.json(result);
-  } catch (err: any) {
-    return c.json({ error: err.message }, 400);
-  }
-});
-
-app.delete("/api/users", async (c) => {
-  try {
-    const { email } = await c.req.json();
-    await deleteUser(email);
-    return c.json({ success: true });
-  } catch (err: any) {
-    return c.json({ error: err.message }, 400);
-  }
-});
-
 app.get("/api/settings", async (c) => {
   try {
     console.log("🔎 [API] GET /api/settings");
@@ -1330,10 +997,7 @@ const startup = async () => {
         .catch(err => console.error("❌ [Startup] specific follower update failed", err));
     }
 
-    await seedDefaultAdmin();
-
     startCronScheduler(mastra);
-
     console.log("⏰ [Scheduler] Started after ensuring settings table");
 
     serve(
